@@ -61,3 +61,4 @@ tests:
     dependencies:
     - kings-in-the-corner
     - hspec
+    - QuickCheck
