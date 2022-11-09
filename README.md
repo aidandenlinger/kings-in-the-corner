@@ -40,3 +40,5 @@ Our goal is to develop a 2-4 player networked game of “Kings In The Corner” 
 | Bug fixes, completion    | 2 days        | Week 10    |
 | Demo / Presentation prep    | 2 days        | Week 10    |
 
+## Acknowledgements
+Image is from <https://commons.wikimedia.org/wiki/File:Kings_in_the_Corner_card_game.jpg>.
