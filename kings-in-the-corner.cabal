@@ -49,6 +49,19 @@ executable kings-in-the-corner-exe
     , kings-in-the-corner
   default-language: Haskell2010
 
+executable z-aidan-demo
+  main-is: Main.hs
+  other-modules:
+      Paths_kings_in_the_corner
+  hs-source-dirs:
+      aidan-demo
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , brick
+    , microlens-platform
+  default-language: Haskell2010
+
 test-suite kings-in-the-corner-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
