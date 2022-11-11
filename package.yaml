@@ -59,6 +59,7 @@ executables:
     dependencies:
     - brick
     - microlens-platform
+    - vty
 
 tests:
   kings-in-the-corner-test:

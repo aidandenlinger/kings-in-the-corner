@@ -60,6 +60,7 @@ executable z-aidan-demo
       base >=4.7 && <5
     , brick
     , microlens-platform
+    , vty
   default-language: Haskell2010
 
 test-suite kings-in-the-corner-test
