@@ -6,10 +6,9 @@ import Brick.Widgets.Border.Style (unicodeRounded)
 import Brick.Widgets.Center (center)
 import Data.List (foldl1')
 import Data.List.Index (modifyAt)
-import Graphics.Vty (Event (EvMouseDown, EvResize), Key (..))
+import Graphics.Vty (Event (..), Key (..))
 import Graphics.Vty.Attributes (Attr, defAttr)
 import Graphics.Vty.Attributes.Color (blue)
-import Graphics.Vty.Input.Events (Event (EvKey))
 import System.Exit (exitSuccess)
 
 -- width, height of cards
@@ -37,10 +36,13 @@ isSelected = withAttr (attrName "selected_card")
 type GameState = (Int, Int)
 
 myAppHandleEvent :: GameState -> BrickEvent n e -> EventM n (Next GameState)
-myAppHandleEvent (sel, numCards) (VtyEvent (EvKey KLeft _)) = continue ((sel - 1) `mod` numCards, numCards)
-myAppHandleEvent (sel, numCards) (VtyEvent (EvKey KRight _)) = continue ((sel + 1) `mod` numCards, numCards)
+myAppHandleEvent (sel, numCards) (VtyEvent (EvKey KLeft _)) =
+  continue ((sel - 1) `mod` numCards, numCards)
+myAppHandleEvent (sel, numCards) (VtyEvent (EvKey KRight _)) =
+  continue ((sel + 1) `mod` numCards, numCards)
 myAppHandleEvent s (VtyEvent (EvKey KEsc [])) = halt s
-myAppHandleEvent (sel, numCards) (VtyEvent (EvMouseDown {})) = continue ((sel + 1) `mod` numCards, numCards)
+myAppHandleEvent (sel, numCards) (MouseDown {}) =
+  continue ((sel + 1) `mod` numCards, numCards)
 myAppHandleEvent s _ = continue s
 
 playerHand :: [String]
@@ -52,16 +54,22 @@ main = do
   let app =
         App
           { -- given a state, return list of widgets to draw. in this case,
-            -- ignore state and just draw card, with label as selected
-            appDraw = \(sel, _) -> [foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerHand)) <=> str ("selected: " ++ show sel)],
-            -- given state and an event, describe how to change state. this
-            -- helper func in Brick.Main halts the program on any event
-            -- except a resize
+            -- state is the index of the card selected and the number of cards.
+            -- make the playerHand a series of widgets, make the selected card
+            -- selected, then use a fold to combine them all horizontally, and
+            -- finally vertically append some text that states what is selected
+            appDraw = \(sel, _) ->
+              [ foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerHand))
+                  <=> str ("selected: " ++ show sel)
+              ],
+            -- given state and an event, describe how to change state. the app
+            -- is then redrawn
             appHandleEvent = myAppHandleEvent,
             -- returns an EventM that runs at app start, this is a demo,
             -- there's nothing to do at start, return
             appStartEvent = return,
-            -- holds attributes that can be applied to elements
+            -- holds attributes that can be applied to elements, ex
+            -- selected_card
             appAttrMap = const $ attrMap defAttr attrs,
             -- don't show cursor
             appChooseCursor = neverShowCursor
