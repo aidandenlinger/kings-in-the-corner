@@ -5,9 +5,11 @@ import Brick.Widgets.Border (border)
 import Brick.Widgets.Border.Style (unicodeRounded)
 import Brick.Widgets.Center (center)
 import Data.List (foldl1')
-import Graphics.Vty (Event (EvResize))
+import Data.List.Index (modifyAt)
+import Graphics.Vty (Event (EvMouseDown, EvResize), Key (..))
 import Graphics.Vty.Attributes (Attr, defAttr)
 import Graphics.Vty.Attributes.Color (blue)
+import Graphics.Vty.Input.Events (Event (EvKey))
 import System.Exit (exitSuccess)
 
 -- width, height of cards
@@ -32,11 +34,17 @@ attrs = [(attrName "selected_card", fg blue)]
 isSelected :: Widget n -> Widget n
 isSelected = withAttr (attrName "selected_card")
 
-type GameState = Integer
+type GameState = (Int, Int)
 
 myAppHandleEvent :: GameState -> BrickEvent n e -> EventM n (Next GameState)
-myAppHandleEvent s (VtyEvent (EvResize _ _)) = continue (s + 1) -- on resize, increment the state
-myAppHandleEvent s _ = halt s
+myAppHandleEvent (sel, numCards) (VtyEvent (EvKey KLeft _)) = continue ((sel - 1) `mod` numCards, numCards)
+myAppHandleEvent (sel, numCards) (VtyEvent (EvKey KRight _)) = continue ((sel + 1) `mod` numCards, numCards)
+myAppHandleEvent s (VtyEvent (EvKey KEsc [])) = halt s
+myAppHandleEvent (sel, numCards) (VtyEvent (EvMouseDown {})) = continue ((sel + 1) `mod` numCards, numCards)
+myAppHandleEvent s _ = continue s
+
+playerHand :: [String]
+playerHand = ["5❤️", "6❤️", "7❤️"]
 
 -- start point of this executable
 main :: IO ()
@@ -45,7 +53,7 @@ main = do
         App
           { -- given a state, return list of widgets to draw. in this case,
             -- ignore state and just draw card, with label as selected
-            appDraw = \s -> [foldl1' (<+>) (map cardWidget ["5❤️", "6❤️", "7❤️"]) <=> str (show s)],
+            appDraw = \(sel, _) -> [foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerHand)) <=> str ("selected: " ++ show sel)],
             -- given state and an event, describe how to change state. this
             -- helper func in Brick.Main halts the program on any event
             -- except a resize
@@ -61,6 +69,6 @@ main = do
   -- use defaultMain to start our app
   -- use [] as our state since this app doesn't store anything
   -- ignore the final returned state, because this app doesn't store anything
-  _ <- defaultMain app (0 :: Integer)
+  _ <- defaultMain app (0, length playerHand)
   -- exit once done, don't check anything
   exitSuccess

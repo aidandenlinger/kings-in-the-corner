@@ -59,6 +59,7 @@ executable z-aidan-demo
   build-depends:
       base >=4.7 && <5
     , brick
+    , ilist
     , microlens-platform
     , vty
   default-language: Haskell2010
