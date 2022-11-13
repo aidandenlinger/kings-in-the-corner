@@ -4,10 +4,11 @@ import Brick
 import Brick.Widgets.Border (border)
 import Brick.Widgets.Border.Style (unicodeRounded)
 import Brick.Widgets.Center (center)
+import Data.List (foldl1')
+import Graphics.Vty (Event (EvResize))
 import Graphics.Vty.Attributes (Attr, defAttr)
 import Graphics.Vty.Attributes.Color (blue)
 import System.Exit (exitSuccess)
-import Data.List (foldl1')
 
 -- width, height of cards
 cardSize :: (Int, Int)
@@ -31,6 +32,12 @@ attrs = [(attrName "selected_card", fg blue)]
 isSelected :: Widget n -> Widget n
 isSelected = withAttr (attrName "selected_card")
 
+type GameState = Integer
+
+myAppHandleEvent :: GameState -> BrickEvent n e -> EventM n (Next GameState)
+myAppHandleEvent s (VtyEvent (EvResize _ _)) = continue (s + 1) -- on resize, increment the state
+myAppHandleEvent s _ = halt s
+
 -- start point of this executable
 main :: IO ()
 main = do
@@ -38,11 +45,11 @@ main = do
         App
           { -- given a state, return list of widgets to draw. in this case,
             -- ignore state and just draw card, with label as selected
-            appDraw = const [foldl1' (<+>) $ map cardWidget ["5❤️", "6❤️", "7❤️"]],
+            appDraw = \s -> [foldl1' (<+>) (map cardWidget ["5❤️", "6❤️", "7❤️"]) <=> str (show s)],
             -- given state and an event, describe how to change state. this
             -- helper func in Brick.Main halts the program on any event
             -- except a resize
-            appHandleEvent = resizeOrQuit,
+            appHandleEvent = myAppHandleEvent,
             -- returns an EventM that runs at app start, this is a demo,
             -- there's nothing to do at start, return
             appStartEvent = return,
