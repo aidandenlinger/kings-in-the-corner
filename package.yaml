@@ -62,6 +62,7 @@ executables:
     - brick
     - microlens-platform
     - vty
+    - ilist
 
 tests:
   kings-in-the-corner-test:
