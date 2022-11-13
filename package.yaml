@@ -38,6 +38,8 @@ library:
   dependencies:
   - brick
   - microlens-platform
+  - text
+  - vty
 
 executables:
   kings-in-the-corner-exe:

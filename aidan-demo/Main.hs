@@ -6,7 +6,7 @@ import Brick.Widgets.Border.Style (unicodeRounded)
 import Graphics.Vty.Attributes (defAttr, Attr)
 import Graphics.Vty.Attributes.Color (blue)
 import System.Exit (exitSuccess)
-import Brick.Widgets.Center (center)
+import Brick.Widgets.Center
 
 -- width, height of cards
 cardSize :: (Int, Int)
@@ -20,7 +20,7 @@ cardStyle = withBorderStyle unicodeRounded . border
 
 -- takes in card text, centers it, makes it card size
 cardWidget :: String -> Widget ()
-cardWidget text = setAvailableSize cardSize $ center $ str text
+cardWidget text = setAvailableSize cardSize $ center $ str text 
 
 -- attributes that widgets can use
 attrs :: [(AttrName, Attr)]
