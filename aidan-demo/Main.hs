@@ -3,14 +3,15 @@ module Main (main) where
 import Brick
 import Brick.Widgets.Border (border)
 import Brick.Widgets.Border.Style (unicodeRounded)
-import Graphics.Vty.Attributes (defAttr, Attr)
+import Brick.Widgets.Center (center)
+import Graphics.Vty.Attributes (Attr, defAttr)
 import Graphics.Vty.Attributes.Color (blue)
 import System.Exit (exitSuccess)
-import Brick.Widgets.Center
+import Data.List (foldl1')
 
 -- width, height of cards
 cardSize :: (Int, Int)
-cardSize = (4,3)
+cardSize = (4, 3)
 
 -- stolen from
 -- <https://github.com/ambuc/solitaire/blob/0ada6e445c85f2f61c15081be49a99df6e272d29/src/Render.hs#L18>
@@ -20,7 +21,7 @@ cardStyle = withBorderStyle unicodeRounded . border
 
 -- takes in card text, centers it, makes it card size
 cardWidget :: String -> Widget ()
-cardWidget text = setAvailableSize cardSize $ center $ str text 
+cardWidget text = cardStyle $ setAvailableSize cardSize $ center $ str text
 
 -- attributes that widgets can use
 attrs :: [(AttrName, Attr)]
@@ -37,7 +38,7 @@ main = do
         App
           { -- given a state, return list of widgets to draw. in this case,
             -- ignore state and just draw card, with label as selected
-            appDraw = const [isSelected $ cardStyle $ cardWidget "5❤️"],
+            appDraw = const [foldl1' (<+>) $ map cardWidget ["5❤️", "6❤️", "7❤️"]],
             -- given state and an event, describe how to change state. this
             -- helper func in Brick.Main halts the program on any event
             -- except a resize
@@ -53,6 +54,6 @@ main = do
   -- use defaultMain to start our app
   -- use [] as our state since this app doesn't store anything
   -- ignore the final returned state, because this app doesn't store anything
-  _ <- defaultMain app []
+  _ <- defaultMain app (0 :: Integer)
   -- exit once done, don't check anything
   exitSuccess
