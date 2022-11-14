@@ -23,10 +23,10 @@ cardStyle = withBorderStyle unicodeRounded . border
 
 -- takes in card text, centers it, makes it card size
 cardWidget :: String -> Widget ()
-cardWidget text = padRight Max $ cardStyle $ setAvailableSize cardSize $ center $ str text
+cardWidget text = padTop Max $ padAll 1 $ cardStyle $ setAvailableSize cardSize $ center $ str text
 
 cardWidgetTop :: String -> Widget ()
-cardWidgetTop text = padLeftRight 40 $ cardStyle $ setAvailableSize cardSize $ center $ str text
+cardWidgetTop text = padLeftRight 30 $ cardStyle $ setAvailableSize cardSize $ center $ str text
 
 -- attributes that widgets can use
 attrs :: [(AttrName, Attr)]
@@ -63,7 +63,7 @@ main = do
             -- finally vertically append some text that states what is selected
             appDraw = \(sel, _) ->
               [ vBox [cardWidgetTop "8♠"] <=>
-                (foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerHand)))
+                (padLeftRight 20 (foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerHand))))
                   <=> str ("selected: " ++ show sel)
               ],
             -- given state and an event, describe how to change state. the app
