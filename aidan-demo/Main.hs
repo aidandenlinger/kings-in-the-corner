@@ -25,8 +25,11 @@ cardStyle = withBorderStyle unicodeRounded . border
 cardWidget :: String -> Widget ()
 cardWidget text = padTop Max $ padAll 1 $ cardStyle $ setAvailableSize cardSize $ center $ str text
 
-cardWidgetTop :: String -> Widget ()
-cardWidgetTop text = padLeftRight 30 $ cardStyle $ setAvailableSize cardSize $ center $ str text
+cardWidgetNorthSouth :: String -> Widget ()
+cardWidgetNorthSouth text = padLeftRight 30 $ cardStyle $ setAvailableSize cardSize $ center $ str text
+
+cardWidgetEastWest :: String -> Widget ()
+cardWidgetEastWest text = padLeftRight 13 $ cardStyle $ setAvailableSize cardSize $ center $ str text
 
 -- attributes that widgets can use
 attrs :: [(AttrName, Attr)]
@@ -62,7 +65,9 @@ main = do
             -- selected, then use a fold to combine them all horizontally, and
             -- finally vertically append some text that states what is selected
             appDraw = \(sel, _) ->
-              [ vBox [cardWidgetTop "8♠"] <=>
+              [ vBox [cardWidgetNorthSouth "8♠"] <=>
+                (cardWidgetEastWest "9♧" <+> cardWidgetEastWest "6♧") <=>
+                (cardWidgetNorthSouth "K♦") <=>
                 (padLeftRight 20 (foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerHand))))
                   <=> str ("selected: " ++ show sel)
               ],
