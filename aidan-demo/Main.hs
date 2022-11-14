@@ -3,7 +3,7 @@ module Main (main) where
 import Brick
 import Brick.Widgets.Border (border)
 import Brick.Widgets.Border.Style (unicodeRounded)
-import Brick.Widgets.Center (center)
+import Brick.Widgets.Center
 import Data.List (foldl1')
 import Data.List.Index (modifyAt)
 import Graphics.Vty (Event (..), Key (..))
@@ -23,7 +23,10 @@ cardStyle = withBorderStyle unicodeRounded . border
 
 -- takes in card text, centers it, makes it card size
 cardWidget :: String -> Widget ()
-cardWidget text = cardStyle $ setAvailableSize cardSize $ center $ str text
+cardWidget text = padRight Max $ cardStyle $ setAvailableSize cardSize $ center $ str text
+
+cardWidgetTop :: String -> Widget ()
+cardWidgetTop text = padLeftRight 40 $ cardStyle $ setAvailableSize cardSize $ center $ str text
 
 -- attributes that widgets can use
 attrs :: [(AttrName, Attr)]
@@ -59,7 +62,8 @@ main = do
             -- selected, then use a fold to combine them all horizontally, and
             -- finally vertically append some text that states what is selected
             appDraw = \(sel, _) ->
-              [ foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerHand))
+              [ vBox [cardWidgetTop "8♠"] <=>
+                (foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerHand)))
                   <=> str ("selected: " ++ show sel)
               ],
             -- given state and an event, describe how to change state. the app
