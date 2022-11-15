@@ -8,7 +8,7 @@ import Data.List (foldl1')
 import Data.List.Index (modifyAt)
 import Graphics.Vty (Event (..), Key (..))
 import Graphics.Vty.Attributes (Attr, defAttr)
-import Graphics.Vty.Attributes.Color (blue)
+import Graphics.Vty.Attributes.Color (blue, green)
 import System.Exit (exitSuccess)
 
 -- width, height of cards
@@ -33,26 +33,39 @@ cardWidgetEastWest text = padLeftRight 13 $ cardStyle $ setAvailableSize cardSiz
 
 -- attributes that widgets can use
 attrs :: [(AttrName, Attr)]
-attrs = [(attrName "selected_card", fg blue)]
+attrs = [(attrName "selected_card", fg blue), (attrName "place_card", fg green)]
 
 -- marks a card as selected
 isSelected :: Widget n -> Widget n
 isSelected = withAttr (attrName "selected_card")
 
-type GameState = (Int, Int)
+-- where to place card
+placeCard :: Widget n -> Widget n
+placeCard = withAttr (attrName "place_card")
+
+type GameState = (Int, Int, Int)
 
 myAppHandleEvent :: GameState -> BrickEvent n e -> EventM n (Next GameState)
-myAppHandleEvent (sel, numCards) (VtyEvent (EvKey KLeft _)) =
-  continue ((sel - 1) `mod` numCards, numCards)
-myAppHandleEvent (sel, numCards) (VtyEvent (EvKey KRight _)) =
-  continue ((sel + 1) `mod` numCards, numCards)
+myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KLeft _)) =
+  continue ((sel - 1) `mod` numCards, place, numCards)
+myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KRight _)) =
+  continue ((sel + 1) `mod` numCards, place, numCards)
+myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KUp _)) =
+  continue (sel, (place - 1) `mod` 4, numCards)
+myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KDown _)) =
+  continue (sel, (place + 1) `mod` 4, numCards)
+myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KEnter _)) =
+  continue (sel, place, numCards)
 myAppHandleEvent s (VtyEvent (EvKey KEsc [])) = halt s
-myAppHandleEvent (sel, numCards) (MouseDown {}) =
-  continue ((sel + 1) `mod` numCards, numCards)
+myAppHandleEvent (sel, place, numCards) (MouseDown {}) =
+  continue ((sel + 1) `mod` numCards, 0, numCards)
 myAppHandleEvent s _ = continue s
 
 playerHand :: [String]
 playerHand = ["5❤️", "6❤️", "7❤️"]
+
+board :: [String]
+board = ["8♠", "9♧", "6♧", "K♦"]
 
 -- start point of this executable
 main :: IO ()
@@ -64,10 +77,10 @@ main = do
             -- make the playerHand a series of widgets, make the selected card
             -- selected, then use a fold to combine them all horizontally, and
             -- finally vertically append some text that states what is selected
-            appDraw = \(sel, _) ->
-              [ vBox [cardWidgetNorthSouth "8♠"] <=>
-                (cardWidgetEastWest "9♧" <+> cardWidgetEastWest "6♧") <=>
-                (cardWidgetNorthSouth "K♦") <=>
+            appDraw = \(sel, place, _) ->
+              [ vBox (map (\x -> if (place == 0) then placeCard x else x) [cardWidgetNorthSouth (board!!0)]) <=>
+                (hBox (map (\x -> if (place == 3) then placeCard x else x) [cardWidgetEastWest (board!!1)]) <+> hBox (map (\x -> if (place == 1) then placeCard x else x) [cardWidgetEastWest (board!!2)])) <=>
+                vBox (map (\x -> if (place == 2) then placeCard x else x) [cardWidgetNorthSouth (board!!3)]) <=>
                 (padLeftRight 20 (foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerHand))))
                   <=> str ("selected: " ++ show sel)
               ],
@@ -86,6 +99,6 @@ main = do
   -- use defaultMain to start our app
   -- use [] as our state since this app doesn't store anything
   -- ignore the final returned state, because this app doesn't store anything
-  _ <- defaultMain app (0, length playerHand)
+  _ <- defaultMain app (0, 0, length playerHand)
   -- exit once done, don't check anything
   exitSuccess
