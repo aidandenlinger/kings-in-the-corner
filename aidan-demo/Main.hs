@@ -51,9 +51,9 @@ myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KLeft _)) =
 myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KRight _)) =
   continue ((sel + 1) `mod` numCards, place, numCards)
 myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KUp _)) =
-  continue (sel, (place - 1) `mod` 4, numCards)
-myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KDown _)) =
   continue (sel, (place + 1) `mod` 4, numCards)
+myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KDown _)) =
+  continue (sel, (place - 1) `mod` 4, numCards)
 myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KEnter _)) =
   continue (sel, place, numCards)
 myAppHandleEvent s (VtyEvent (EvKey KEsc [])) = halt s
