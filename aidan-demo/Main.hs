@@ -4,6 +4,7 @@ import Brick
 import Brick.Widgets.Border (border)
 import Brick.Widgets.Border.Style (unicodeRounded)
 import Brick.Widgets.Center
+import Brick.Widgets.Core (cropBottomBy)
 import Data.List (foldl1')
 import Data.List.Index (modifyAt)
 import Graphics.Vty (Event (..), Key (..))
@@ -30,6 +31,9 @@ cardWidgetNorthSouth text = padLeftRight 30 $ cardStyle $ setAvailableSize cardS
 
 cardWidgetEastWest :: String -> Widget ()
 cardWidgetEastWest text = padLeftRight 13 $ cardStyle $ setAvailableSize cardSize $ center $ str text
+
+cardWidgetEastWestBottom :: String -> Widget ()
+cardWidgetEastWestBottom text = padLeftRight 13 $ cardStyle $ setAvailableSize (4, 2) $ center $ str text
 
 -- attributes that widgets can use
 attrs :: [(AttrName, Attr)]
@@ -79,6 +83,7 @@ main = do
             -- finally vertically append some text that states what is selected
             appDraw = \(sel, place, _) ->
               [ vBox (map (\x -> if (place == 0) then placeCard x else x) [cardWidgetNorthSouth (board!!0)]) <=>
+                (cropBottomBy 1 (cardWidgetEastWestBottom (board!!3))) <=>
                 (hBox (map (\x -> if (place == 3) then placeCard x else x) [cardWidgetEastWest (board!!1)]) <+> hBox (map (\x -> if (place == 1) then placeCard x else x) [cardWidgetEastWest (board!!2)])) <=>
                 vBox (map (\x -> if (place == 2) then placeCard x else x) [cardWidgetNorthSouth (board!!3)]) <=>
                 (padLeftRight 20 (foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerHand))))
