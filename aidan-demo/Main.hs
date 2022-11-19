@@ -81,9 +81,9 @@ main = do
             -- make the playerHand a series of widgets, make the selected card
             -- selected, then use a fold to combine them all horizontally, and
             -- finally vertically append some text that states what is selected
-            appDraw = \(sel, place, _) ->
+        appDraw = \(sel, place, _) ->
               [ vBox (map (\x -> if (place == 0) then placeCard x else x) [cardWidgetNorthSouth (board!!0)]) <=>
-                (cropBottomBy 1 (cardWidgetEastWestBottom (board!!3))) <=>
+                ((cropBottomBy 2 (cardWidgetEastWestBottom (board!!3))) <+> (cropBottomBy 2 (cardWidgetEastWestBottom (board!!3)))) <=>
                 (hBox (map (\x -> if (place == 3) then placeCard x else x) [cardWidgetEastWest (board!!1)]) <+> hBox (map (\x -> if (place == 1) then placeCard x else x) [cardWidgetEastWest (board!!2)])) <=>
                 vBox (map (\x -> if (place == 2) then placeCard x else x) [cardWidgetNorthSouth (board!!3)]) <=>
                 (padLeftRight 20 (foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerHand))))
