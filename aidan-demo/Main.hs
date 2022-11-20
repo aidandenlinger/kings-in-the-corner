@@ -4,12 +4,12 @@ import Brick
 import Brick.Widgets.Border (border)
 import Brick.Widgets.Border.Style (unicodeRounded)
 import Brick.Widgets.Center
-import Brick.Widgets.Core (cropBottomBy)
+import Brick.Widgets.Core (cropBottomBy, updateAttrMap)
 import Data.List (foldl1')
 import Data.List.Index (modifyAt)
 import Graphics.Vty (Event (..), Key (..))
 import Graphics.Vty.Attributes (Attr, defAttr)
-import Graphics.Vty.Attributes.Color (blue, green)
+import Graphics.Vty.Attributes.Color (blue, green, red)
 import System.Exit (exitSuccess)
 
 -- width, height of cards
@@ -40,7 +40,7 @@ cardWidgetEastWestBottom text = padLeftRight 13 $ cardStyle $ setAvailableSize (
 
 -- attributes that widgets can use
 attrs :: [(AttrName, Attr)]
-attrs = [(attrName "selected_card", fg blue), (attrName "place_card", fg green)]
+attrs = [(attrName "selected_card", fg blue), (attrName "place_card", fg green), (attrName "red_cards", fg red)]
 
 -- marks a card as selected
 isSelected :: Widget n -> Widget n
@@ -49,6 +49,9 @@ isSelected = withAttr (attrName "selected_card")
 -- where to place card
 placeCard :: Widget n -> Widget n
 placeCard = withAttr (attrName "place_card")
+
+redCards :: Widget n -> Widget n
+redCards = withAttr (attrName "red_cards")
 
 type GameState = (Int, Int, Int)
 
@@ -72,7 +75,7 @@ playerHand :: [String]
 playerHand = ["5❤️", "6❤️", "7❤️"]
 
 board :: [String]
-board = ["8♠", "9♧", "6♧", "K♦", "Q❤️", "J♦"]
+board = ["8♠", "9♣", "6♣", "K♦", "Q❤️", "J♦"]
 
 -- start point of this executable
 main :: IO ()
@@ -85,7 +88,7 @@ main = do
             -- selected, then use a fold to combine them all horizontally, and
             -- finally vertically append some text that states what is selected
         appDraw = \(sel, place, _) ->
-              [ ((cropBottomBy 2 (cardWidgetNorthSouthBottom (board!!4))) <=> vBox (map (\x -> if (place == 0) then placeCard x else x) [cardWidgetNorthSouth (board!!0)])) <=>
+              [ ((cropBottomBy 2 (cardWidgetNorthSouthBottom (board!!3))) <=> vBox (map (\x -> if (place == 0) then placeCard x else x) [cardWidgetNorthSouth (board!!0)])) <=>
                 ((cropBottomBy 2 (cardWidgetEastWestBottom (board!!3))) <+> (cropBottomBy 2 (cardWidgetEastWestBottom (board!!3)))) <=>
                 (hBox (map (\x -> if (place == 3) then placeCard x else x) [cardWidgetEastWest (board!!1)]) <+> hBox (map (\x -> if (place == 1) then placeCard x else x) [cardWidgetEastWest (board!!2)])) <=>
                 ((cropBottomBy 2 (cardWidgetNorthSouthBottom (board!!5))) <=> vBox (map (\x -> if (place == 2) then placeCard x else x) [cardWidgetNorthSouth (board!!3)])) <=>
