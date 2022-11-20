@@ -72,10 +72,10 @@ myAppHandleEvent (sel, place, numCards) (MouseDown {}) =
 myAppHandleEvent s _ = continue s
 
 playerHand :: [String]
-playerHand = ["5❤️", "6❤️", "7❤️"]
+playerHand = ["5❤️", "6♣︎", "7♥️"]
 
 board :: [String]
-board = ["8♠", "9♣", "6♣", "K♦", "Q❤️", "J♦"]
+board = ["8♠", "9♠", "6♣︎", "K♦️", "Q❤️", "J♦"]
 
 -- start point of this executable
 main :: IO ()
