@@ -29,6 +29,9 @@ cardWidget text = padTop Max $ padAll 1 $ cardStyle $ setAvailableSize cardSize 
 cardWidgetNorthSouth :: String -> Widget ()
 cardWidgetNorthSouth text = padLeftRight 30 $ cardStyle $ setAvailableSize cardSize $ center $ str text
 
+cardWidgetNorthSouthBottom :: String -> Widget ()
+cardWidgetNorthSouthBottom text = padLeftRight 30 $ cardStyle $ setAvailableSize (4, 2) $ center $ str text
+
 cardWidgetEastWest :: String -> Widget ()
 cardWidgetEastWest text = padLeftRight 13 $ cardStyle $ setAvailableSize cardSize $ center $ str text
 
@@ -69,7 +72,7 @@ playerHand :: [String]
 playerHand = ["5❤️", "6❤️", "7❤️"]
 
 board :: [String]
-board = ["8♠", "9♧", "6♧", "K♦"]
+board = ["8♠", "9♧", "6♧", "K♦", "Q❤️", "J♦"]
 
 -- start point of this executable
 main :: IO ()
@@ -82,10 +85,10 @@ main = do
             -- selected, then use a fold to combine them all horizontally, and
             -- finally vertically append some text that states what is selected
         appDraw = \(sel, place, _) ->
-              [ vBox (map (\x -> if (place == 0) then placeCard x else x) [cardWidgetNorthSouth (board!!0)]) <=>
+              [ ((cropBottomBy 2 (cardWidgetNorthSouthBottom (board!!4))) <=> vBox (map (\x -> if (place == 0) then placeCard x else x) [cardWidgetNorthSouth (board!!0)])) <=>
                 ((cropBottomBy 2 (cardWidgetEastWestBottom (board!!3))) <+> (cropBottomBy 2 (cardWidgetEastWestBottom (board!!3)))) <=>
                 (hBox (map (\x -> if (place == 3) then placeCard x else x) [cardWidgetEastWest (board!!1)]) <+> hBox (map (\x -> if (place == 1) then placeCard x else x) [cardWidgetEastWest (board!!2)])) <=>
-                vBox (map (\x -> if (place == 2) then placeCard x else x) [cardWidgetNorthSouth (board!!3)]) <=>
+                ((cropBottomBy 2 (cardWidgetNorthSouthBottom (board!!5))) <=> vBox (map (\x -> if (place == 2) then placeCard x else x) [cardWidgetNorthSouth (board!!3)])) <=>
                 (padLeftRight 20 (foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerHand))))
                   <=> str ("selected: " ++ show sel)
               ],
