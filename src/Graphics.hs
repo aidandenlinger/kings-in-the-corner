@@ -28,13 +28,14 @@ italicStyle = withBorderStyle custom . border
 
 custom :: BS.BorderStyle
 custom =
-    BS.BorderStyle   { BS.bsCornerTL = '╒'
-                  , BS.bsCornerTR = '╕'
-                  , BS.bsCornerBR = '╛'
-                  , BS.bsCornerBL = '╘'
-                  , BS.bsHorizontal = '─'
-                  , BS.bsVertical = '/'
-                   }
+  BS.BorderStyle
+    { BS.bsCornerTL = '╒',
+      BS.bsCornerTR = '╕',
+      BS.bsCornerBR = '╛',
+      BS.bsCornerBL = '╘',
+      BS.bsHorizontal = '─',
+      BS.bsVertical = '/'
+    }
 
 -- takes in card text, centers it, makes it card size
 cardWidget :: String -> Widget ()
