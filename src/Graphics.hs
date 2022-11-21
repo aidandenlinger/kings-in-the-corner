@@ -2,9 +2,10 @@ module Graphics (gameStart) where
 
 import Brick
 import Brick.Widgets.Border (border)
-import Brick.Widgets.Border.Style as BS--(unicodeRounded, bsVertical)
+import Brick.Widgets.Border.Style as BS -- (unicodeRounded, bsVertical)
 import Brick.Widgets.Center
 import Brick.Widgets.Core (cropBottomBy, updateAttrMap, withBorderStyle)
+import CardTypes
 import Data.List (foldl1')
 import Data.List.Index (modifyAt)
 import Graphics.Vty (Event (..), Key (..))
@@ -82,10 +83,10 @@ myAppHandleEvent (sel, _, numCards) (MouseDown {}) =
 myAppHandleEvent s _ = continue s
 
 playerHand :: [String]
-playerHand = ["5❤️", "6♣︎", "7♥️"]
+playerHand = map show [Card R5 Heart, Card R6 Club, Card R7 Heart]
 
 board :: [String]
-board = ["8♠", "9♠", "6♣︎", "K♦️", "Q❤️", "J♦"]
+board = map show [Card R8 Spade, Card R9 Spade, Card R6 Club, Card RK Diamond, Card RQ Heart, Card RJ Diamond]
 
 gameStart :: IO ()
 gameStart = do
