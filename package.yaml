@@ -38,6 +38,7 @@ library:
   dependencies:
   - brick
   - microlens-platform
+  - random
 
 executables:
   kings-in-the-corner-exe:
