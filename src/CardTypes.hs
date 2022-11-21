@@ -73,7 +73,7 @@ data DisplayMode = Stacked | Splayed | Sp3           deriving (Eq, Show, Ord)
 -- CenterP  : One of the 4 piles along the straight lines from the center
 -- CornerP  : One of the 4 piles in the corner headed by a King
 
-data PileType    = PlayerP | DrawP | CenterP | CornerP
+data PileType    = PlayerP | DrawP | CenterP | CornerP deriving (Eq, Show)
 
 -- Data type for pile of cards.X
 
