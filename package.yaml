@@ -39,6 +39,8 @@ library:
   - brick
   - microlens-platform
   - random
+  - text
+  - vty
 
 executables:
   kings-in-the-corner-exe:
@@ -50,6 +52,18 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - kings-in-the-corner
+  z-aidan-demo:
+    main:                Main.hs
+    source-dirs:         aidan-demo
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - brick
+    - microlens-platform
+    - vty
+    - ilist
 
 tests:
   kings-in-the-corner-test:
