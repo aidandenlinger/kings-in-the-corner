@@ -27,7 +27,6 @@ library
   exposed-modules:
       CardTypes
       Lib
-      Utils
   other-modules:
       Paths_kings_in_the_corner
   hs-source-dirs:
@@ -37,6 +36,7 @@ library
       base >=4.7 && <5
     , brick
     , microlens-platform
+    , random
   default-language: Haskell2010
 
 executable kings-in-the-corner-exe
