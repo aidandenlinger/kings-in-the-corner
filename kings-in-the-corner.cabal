@@ -27,6 +27,7 @@ library
   exposed-modules:
       CardTypes
       Lib
+      Utils
   other-modules:
       Paths_kings_in_the_corner
   hs-source-dirs:

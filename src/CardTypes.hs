@@ -15,9 +15,9 @@ module CardTypes
   , Suit(..)
   ) where
 
--- Base code borrowed from https://github.com/ambuc/solitaire
-
 import qualified System.Random as R (StdGen)
+
+-- Base code borrowed from https://github.com/ambuc/solitaire
 
 -- CARD TYPES ------------------------------------------------------------------
 -- Define basic data types to handle cards
@@ -99,7 +99,7 @@ data Field = Field { _draw    :: Pile
 
 data GSt = GSt { _field   :: Field            -- Current state of decks
                , _seed    :: R.StdGen         -- A random seed to be passed thru
-               , _history :: [(Field, Int)]   -- List of previous fields
+               , _history :: [(Field, Int)]   -- List of previous fields and corresponding player ids
                , _toplay  :: Int              -- Player id of the one with next move
                } deriving (Show)
 
