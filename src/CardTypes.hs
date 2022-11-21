@@ -50,7 +50,10 @@ instance Show Suit where
 
 -- Data type for Card. Contains 2 attributes rank and suit.
 
-data Card        = Card Rank Suit                    deriving (Eq, Show, Ord)
+data Card        = Card Rank Suit                    deriving (Eq, Ord)
+
+instance Show Card where
+  show (Card r s) = show r ++ show s
 
 -- Data type for the direction card is facing in a pile
 
