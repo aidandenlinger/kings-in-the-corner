@@ -77,7 +77,7 @@ myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KDown _)) =
 myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KEnter _)) =
   continue (sel, place, numCards)
 myAppHandleEvent s (VtyEvent (EvKey KEsc [])) = halt s
-myAppHandleEvent (sel, place, numCards) (MouseDown {}) =
+myAppHandleEvent (sel, _, numCards) (MouseDown {}) =
   continue ((sel + 1) `mod` numCards, 0, numCards)
 myAppHandleEvent s _ = continue s
 
