@@ -88,6 +88,19 @@ playerHand = map show [Card R5 Heart, Card R6 Club, Card R7 Heart]
 board :: [String]
 board = map show [Card R8 Spade, Card R9 Spade, Card R6 Club, Card RK Diamond, Card RQ Heart, Card RJ Diamond]
 
+draw :: GameState -> Widget ()
+draw (sel, place, _) =
+  cropBottomBy 2 (cardWidgetNorthSouthBottom (board !! 3)) -- top pile, bottom card
+    <=> vBox (map (\x -> if place == 0 then placeCard x else x) [cardWidgetNorthSouth (head board)]) -- top pile, top card
+    <=> (cropBottomBy 2 (cardWidgetEastWestBottom (board !! 3)) -- left pile, bottom card
+      <+> cropBottomBy 2 (cardWidgetEastWestBottom (board !! 3))) -- right pile, bottom card
+    <=> (hBox (map (\x -> if place == 3 then placeCard x else x) [cardWidgetEastWest (board !! 1)]) -- left pile, top card
+      <+> hBox (map (\x -> if place == 1 then placeCard x else x) [cardWidgetEastWest (board !! 2)])) -- right pile, top card
+    <=> cropBottomBy 2 (cardWidgetNorthSouthBottom (board !! 5)) -- bottom pile, bottom card
+    <=> vBox (map (\x -> if place == 2 then placeCard x else x) [cardWidgetNorthSouth (board !! 3)]) -- bottom pile, top card
+    <=> padLeftRight 20 (foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerHand))) -- player hand
+    <=> str ("selected: " ++ show sel) -- selected card
+
 gameStart :: IO ()
 gameStart = do
   let app =
@@ -97,14 +110,7 @@ gameStart = do
             -- make the playerHand a series of widgets, make the selected card
             -- selected, then use a fold to combine them all horizontally, and
             -- finally vertically append some text that states what is selected
-        appDraw = \(sel, place, _) ->
-              [ ( (cropBottomBy 2 (cardWidgetNorthSouthBottom (board!!3))) <=> vBox (map (\x -> if (place == 0) then placeCard x else x) [cardWidgetNorthSouth (board!!0)])) <=>
-                ((cropBottomBy 2 (cardWidgetEastWestBottom (board!!3))) <+> (cropBottomBy 2 (cardWidgetEastWestBottom (board!!3)))) <=>
-                (hBox (map (\x -> if (place == 3) then placeCard x else x) [cardWidgetEastWest (board!!1)]) <+> hBox (map (\x -> if (place == 1) then placeCard x else x) [cardWidgetEastWest (board!!2)])) <=>
-                ((cropBottomBy 2 (cardWidgetNorthSouthBottom (board!!5))) <=> vBox (map (\x -> if (place == 2) then placeCard x else x) [cardWidgetNorthSouth (board!!3)])) <=>
-                (padLeftRight 20 (foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerHand))))
-                  <=> str ("selected: " ++ show sel)
-              ],
+            appDraw = \s -> [draw s],
             -- given state and an event, describe how to change state. the app
             -- is then redrawn
             appHandleEvent = myAppHandleEvent,
