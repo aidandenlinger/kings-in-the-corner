@@ -2,7 +2,7 @@ module Main (main) where
 
 import Brick
 import Brick.Widgets.Border (border)
-import Brick.Widgets.Border.Style (unicodeRounded, bsVertical)
+import Brick.Widgets.Border.Style as BS--(unicodeRounded, bsVertical)
 import Brick.Widgets.Center
 import Brick.Widgets.Core (cropBottomBy, updateAttrMap, withBorderStyle)
 import Data.List (foldl1')
@@ -20,11 +20,24 @@ cardSize = (4, 3)
 -- <https://github.com/ambuc/solitaire/blob/0ada6e445c85f2f61c15081be49a99df6e272d29/src/Render.hs#L18>
 -- given a widget, sets the border to be rounded :)
 cardStyle :: Widget n -> Widget n
-cardStyle = withBorderStyle unicodeRounded . border
+cardStyle = withBorderStyle BS.unicodeRounded . border
+
+italicStyle :: Widget n -> Widget n
+italicStyle = withBorderStyle custom . border
+
+custom :: BS.BorderStyle
+custom =
+    BS.BorderStyle   { BS.bsCornerTL = '╒'
+                  , BS.bsCornerTR = '╕'
+                  , BS.bsCornerBR = '╛'
+                  , BS.bsCornerBL = '╘'
+                  , BS.bsHorizontal = '─'
+                  , BS.bsVertical = '/'
+                   }
 
 -- takes in card text, centers it, makes it card size
 cardWidget :: String -> Widget ()
-cardWidget text = padTop Max $ padAll 1 $ cardStyle $ setAvailableSize cardSize $ center $ str text
+cardWidget text = padTop Max $ padAll 1 $ italicStyle $ setAvailableSize cardSize $ center $ str text
 
 cardWidgetNorthSouth :: String -> Widget ()
 cardWidgetNorthSouth text = padLeftRight 30 $ cardStyle $ setAvailableSize cardSize $ center $ str text
