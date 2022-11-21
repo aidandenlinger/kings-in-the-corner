@@ -3,10 +3,7 @@ module Lib
   )
 where
 
-import Brick
-
-ui :: Widget ()
-ui = str "Hello, world!"
+import Graphics
 
 start :: IO ()
-start = simpleMain ui
+start = gameStart

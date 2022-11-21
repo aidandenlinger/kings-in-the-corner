@@ -1,4 +1,4 @@
-module Main (main) where
+module Graphics (gameStart) where
 
 import Brick
 import Brick.Widgets.Border (border)
@@ -87,9 +87,8 @@ playerHand = ["5❤️", "6♣︎", "7♥️"]
 board :: [String]
 board = ["8♠", "9♠", "6♣︎", "K♦️", "Q❤️", "J♦"]
 
--- start point of this executable
-main :: IO ()
-main = do
+gameStart :: IO ()
+gameStart = do
   let app =
         App
           { -- given a state, return list of widgets to draw. in this case,
