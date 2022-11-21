@@ -1,11 +1,9 @@
 module CardTypes
-  ( Action(..)
-  , Axis(..)
+  ( Axis(..)
   , Card(..)
   , Color(..)
   , DCard(..)
   , DisplayMode(..)
-  , Ext(..)
   , FaceDir(..)
   , Field(..)
   , GSt(..)
