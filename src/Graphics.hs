@@ -83,24 +83,33 @@ myAppHandleEvent (sel, _, numCards) (MouseDown {}) =
   continue ((sel + 1) `mod` numCards, 0, numCards)
 myAppHandleEvent s _ = continue s
 
-playerHand :: [String]
-playerHand = map show [Card R5 Heart, Card R6 Club, Card R7 Heart]
+playerCards :: [String]
+playerCards = map show [Card R5 Heart, Card R6 Club, Card R7 Heart]
 
 board :: [String]
 board = map show [Card R8 Spade, Card R9 Spade, Card R6 Club, Card RK Diamond, Card RQ Heart, Card RJ Diamond]
 
 draw :: GameState -> Widget ()
 draw (sel, place, _) =
-  cropBottomBy 2 (cardWidgetNorthSouthBottom (board !! 3)) -- top pile, bottom card
-    <=> vBox (map (\x -> if place == 0 then placeCard x else x) [cardWidgetNorthSouth (head board)]) -- top pile, top card
-    <=> (cropBottomBy 2 (cardWidgetEastWestBottom (board !! 3)) -- left pile, bottom card
-      <+> cropBottomBy 2 (cardWidgetEastWestBottom (board !! 3))) -- right pile, bottom card
-    <=> (hBox (map (\x -> if place == 3 then placeCard x else x) [cardWidgetEastWest (board !! 1)]) -- left pile, top card
-      <+> hBox (map (\x -> if place == 1 then placeCard x else x) [cardWidgetEastWest (board !! 2)])) -- right pile, top card
-    <=> cropBottomBy 2 (cardWidgetNorthSouthBottom (board !! 5)) -- bottom pile, bottom card
-    <=> vBox (map (\x -> if place == 2 then placeCard x else x) [cardWidgetNorthSouth (board !! 3)]) -- bottom pile, top card
-    <=> padLeftRight 20 (foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerHand))) -- player hand
-    <=> str ("selected: " ++ show sel) -- selected card
+  topPiles
+    <=> playerHand
+  where
+    topPiles =
+      cropBottomBy 2 (cardWidgetNorthSouthBottom (board !! 3)) -- top pile, bottom card
+        <=> vBox (checkPlace 0 [cardWidgetNorthSouth (head board)]) -- top pile, top card
+        <=> ( cropBottomBy 2 (cardWidgetEastWestBottom (board !! 3)) -- left pile, bottom card
+                <+> cropBottomBy 2 (cardWidgetEastWestBottom (board !! 3)) -- right pile, bottom card
+            )
+        <=> ( hBox (checkPlace 3 [cardWidgetEastWest (board !! 1)]) -- left pile, top card
+                <+> hBox (checkPlace 1 [cardWidgetEastWest (board !! 2)]) -- right pile, top card
+            )
+        <=> cropBottomBy 2 (cardWidgetNorthSouthBottom (board !! 5)) -- bottom pile, bottom card
+        <=> vBox (checkPlace 2 [cardWidgetNorthSouth (board !! 3)]) -- bottom pile, top card
+      where
+        checkPlace p w
+          | place == p = map placeCard w
+          | otherwise = w
+    playerHand = padLeftRight 20 (foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerCards))) -- player hand
 
 gameStart :: IO ()
 gameStart = do
@@ -127,6 +136,6 @@ gameStart = do
   -- use defaultMain to start our app
   -- use [] as our state since this app doesn't store anything
   -- ignore the final returned state, because this app doesn't store anything
-  _ <- defaultMain app (0, 0, length playerHand)
+  _ <- defaultMain app (0, 0, length playerCards)
   -- exit once done, don't check anything
   exitSuccess
