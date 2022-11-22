@@ -25,12 +25,16 @@ cardStyle = withBorderStyle BS.unicodeRounded . border
 italicStyle :: Widget n -> Widget n
 italicStyle = withBorderStyle custom . border
 
+rrGhost :: Widget () -- renders a 'ghost' card with no content
+rrGhost = padLeftRight 8 $ str "      "
+
+
 custom :: BS.BorderStyle
 custom =
-    BS.BorderStyle   { BS.bsCornerTL = '╒'
-                  , BS.bsCornerTR = '╕'
-                  , BS.bsCornerBR = '╛'
-                  , BS.bsCornerBL = '╘'
+    BS.BorderStyle   { BS.bsCornerTL = toEnum 0x256D
+                  , BS.bsCornerTR = toEnum 0x256E
+                  , BS.bsCornerBR = toEnum 0x256F
+                  , BS.bsCornerBL = toEnum 0x2570
                   , BS.bsHorizontal = '─'
                   , BS.bsVertical = '/'
                    }
@@ -43,13 +47,13 @@ cardWidgetNorthSouth :: String -> Widget ()
 cardWidgetNorthSouth text = padLeftRight 30 $ cardStyle $ setAvailableSize cardSize $ center $ str text
 
 cardWidgetNorthSouthBottom :: String -> Widget ()
-cardWidgetNorthSouthBottom text = padLeftRight 30 $ cardStyle $ setAvailableSize (4, 2) $ center $ str text
+cardWidgetNorthSouthBottom text = padLeftRight 30 $  cardStyle $ setAvailableSize (4, 2) $ center $ str text
 
 cardWidgetEastWest :: String -> Widget ()
-cardWidgetEastWest text = padLeftRight 13 $ cardStyle $ setAvailableSize cardSize $ center $ str text
+cardWidgetEastWest text = padLeftRight 8 $ cardStyle $ setAvailableSize cardSize $ center $ str text
 
 cardWidgetEastWestBottom :: String -> Widget ()
-cardWidgetEastWestBottom text = padLeftRight 13 $ cardStyle $ setAvailableSize (4, 2) $ center $ str text
+cardWidgetEastWestBottom text = padLeftRight 8 $ cardStyle $ setAvailableSize (4, 2) $ center $ str text
 
 -- attributes that widgets can use
 attrs :: [(AttrName, Attr)]
@@ -99,8 +103,8 @@ main = do
             -- finally vertically append some text that states what is selected
         appDraw = \(sel, place, _) ->
               [ ( (cropBottomBy 2 (cardWidgetNorthSouthBottom (board!!3))) <=> vBox (map (\x -> if (place == 0) then placeCard x else x) [cardWidgetNorthSouth (board!!0)])) <=>
-                ((cropBottomBy 2 (cardWidgetEastWestBottom (board!!3))) <+> (cropBottomBy 2 (cardWidgetEastWestBottom (board!!3)))) <=>
-                (hBox (map (\x -> if (place == 3) then placeCard x else x) [cardWidgetEastWest (board!!1)]) <+> hBox (map (\x -> if (place == 1) then placeCard x else x) [cardWidgetEastWest (board!!2)])) <=>
+                ((cropBottomBy 2 (cardWidgetEastWestBottom (board!!3))) <+> rrGhost <+> (cropBottomBy 2 (cardWidgetEastWestBottom (board!!3)))) <=>
+                (hBox (map (\x -> if (place == 3) then placeCard x else x) [cardWidgetEastWest (board!!1)]) <+> (cardWidgetEastWest ("  ")) <+> hBox (map (\x -> if (place == 1) then placeCard x else x) [cardWidgetEastWest (board!!2)])) <=>
                 ((cropBottomBy 2 (cardWidgetNorthSouthBottom (board!!5))) <=> vBox (map (\x -> if (place == 2) then placeCard x else x) [cardWidgetNorthSouth (board!!3)])) <=>
                 (padLeftRight 20 (foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerHand))))
                   <=> str ("selected: " ++ show sel)
