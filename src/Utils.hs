@@ -13,10 +13,10 @@ import CardTypes
 -------------------------------------------------------------------------------
 -- Convert data types from CardTypes to Lenses for easy access
 
-makeLenses ''DCard
-makeLenses ''Pile
-makeLenses ''Field
-makeLenses ''GSt
+-- makeLenses ''DCard
+-- makeLenses ''Pile
+-- makeLenses ''Field
+-- makeLenses ''GSt
 
 ------------------------------------------------------------------------------- 
 
@@ -37,5 +37,5 @@ allRanks = [minBound .. maxBound] :: [Rank] -- list of all ranks
 allSuits :: [Suit]
 allSuits = [minBound .. maxBound] :: [Suit] -- list of all suits
 
--- the default deal is a sorted list of cards. to be shuffled below
+-- the default deal is a sorted list of cards to be shuffled on game state initialization
 initialDeal = [ Card r s | r <- allRanks, s <- allSuits ]
