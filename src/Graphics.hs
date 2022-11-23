@@ -21,6 +21,12 @@ cardHeight = 3
 handPadding :: Int
 handPadding = 1
 
+pileHorizPadding :: Int
+pileHorizPadding = 4
+
+pileVertPadding :: Int
+pileVertPadding = 0
+
 cardSize :: (Int, Int)
 cardSize = (cardWidth, cardHeight)
 
@@ -114,31 +120,18 @@ pileToOverlap pile = vBox [cardWidgetHalf bottomCard, cardWidget topCard]
     bottomCard = (show . last) pile
     topCard = (show . head) pile
 
--- Given a list of widgets, add that much space inbetween the elements
--- horizontally.
-hPadList :: Int -> [Widget ()] -> [Widget ()]
-hPadList _ [] = []
-hPadList p (w : ws) = w : map (padLeft (Pad p)) ws
-
--- Given a list of widgets, add that much space inbetween the elements
--- vertically.
-vPadList :: Int -> [Widget ()] -> [Widget ()]
-vPadList _ [] = []
-vPadList p (w : ws) = w : map (padTop (Pad p)) ws
-
 -- This expects a list of four elements - top pile, right pile, bottom pile,
 -- left pile. This should be not hardcoded in the future
 createTopPiles :: Int -> [[Card]] -> Widget ()
 createTopPiles place piles
   | length piles == 4 =
       vBox $
-        vPadList (handPadding * 2) $
-          map
-            (hCenter . hBox . hPadList (handPadding * 9))
-            [ [cardWidget "top\nleft", topWidget, cardWidget "top\nrigh\nt"],
-              [leftWidget, cardWidget "deck", rightWidget],
-              [cardWidget "bot\nleft", bottomWidget, cardWidget "bot\nrigh\nt"]
-            ]
+        map
+          (padTopBottom pileVertPadding . hCenter . hBox . map (padLeftRight pileHorizPadding))
+          [ [cardWidget "top\nleft", topWidget, cardWidget "top\nrigh\nt"],
+            [leftWidget, cardWidget "deck", rightWidget],
+            [cardWidget "bot\nleft", bottomWidget, cardWidget "bot\nrigh\nt"]
+          ]
   where
     [topWidget, rightWidget, bottomWidget, leftWidget] =
       modifyAt place placeCard $
@@ -150,7 +143,7 @@ createPlayerHand sel hand =
   center $
     hBox $
       modifyAt sel isSelected $
-        map (padAll handPadding . cardWidget . show) hand
+        map (padLeftRight handPadding . cardWidget . show) hand
 
 draw :: GameState -> Widget ()
 draw (sel, place, _) =
