@@ -12,9 +12,18 @@ import Graphics.Vty.Attributes (Attr, defAttr)
 import Graphics.Vty.Attributes.Color (blue, green)
 import System.Exit (exitSuccess)
 
--- width, height of cards
+-- dimension of cards
+cardWidth :: Int
+cardWidth = 4
+
+cardHeight :: Int
+cardHeight = 3
+
+handPadding :: Int
+handPadding = 1
+
 cardSize :: (Int, Int)
-cardSize = (4, 3)
+cardSize = (cardWidth, cardHeight)
 
 -- stolen from
 -- <https://github.com/ambuc/solitaire/blob/0ada6e445c85f2f61c15081be49a99df6e272d29/src/Render.hs#L18>
