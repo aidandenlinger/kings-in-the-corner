@@ -5,7 +5,6 @@ import Brick.Widgets.Border (border)
 import Brick.Widgets.Border.Style as BS -- (unicodeRounded, bsVertical)
 import Brick.Widgets.Center
 import CardTypes
-import Data.List (foldl1')
 import Data.List.Index (modifyAt)
 import Graphics.Vty (Event (..), Key (..))
 import Graphics.Vty.Attributes (Attr, defAttr)
@@ -130,7 +129,11 @@ draw (sel, place, _) =
         checkPlace p w
           | place == p = map placeCard w
           | otherwise = w
-    playerHand = center (foldl1' (<+>) (modifyAt sel isSelected (map (cardWidget . show) playerCards))) -- player hand
+    playerHand =
+      center $
+        hBox $
+          modifyAt sel isSelected $
+            map (padAll handPadding . cardWidget . show) playerCards
 
 gameStart :: IO ()
 gameStart = do
