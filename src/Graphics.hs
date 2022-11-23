@@ -66,19 +66,19 @@ placeCard = withAttr (attrName "place_card")
 
 type GameState = (Int, Int, Int)
 
-myAppHandleEvent :: GameState -> BrickEvent n e -> EventM n (Next GameState)
-myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KLeft _)) =
+handleEvent :: GameState -> BrickEvent n e -> EventM n (Next GameState)
+-- Left and Right move between player cards
+handleEvent (sel, place, numCards) (VtyEvent (EvKey KLeft _)) =
   continue ((sel - 1) `mod` numCards, place, numCards)
-myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KRight _)) =
+handleEvent (sel, place, numCards) (VtyEvent (EvKey KRight _)) =
   continue ((sel + 1) `mod` numCards, place, numCards)
-myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KUp _)) =
+-- Up and Down move between decks
+handleEvent (sel, place, numCards) (VtyEvent (EvKey KUp _)) =
   continue (sel, (place + 1) `mod` 4, numCards)
-myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KDown _)) =
+handleEvent (sel, place, numCards) (VtyEvent (EvKey KDown _)) =
   continue (sel, (place - 1) `mod` 4, numCards)
-myAppHandleEvent (sel, place, numCards) (VtyEvent (EvKey KEnter _)) =
-  continue (sel, place, numCards)
-myAppHandleEvent s (VtyEvent (EvKey KEsc [])) = halt s
-myAppHandleEvent s _ = continue s
+handleEvent s (VtyEvent (EvKey KEsc [])) = halt s
+handleEvent s _ = continue s
 
 playerCards :: [Card]
 playerCards = [Card R5 Heart, Card R6 Club, Card R7 Heart]
@@ -120,7 +120,7 @@ gameStart = do
             appDraw = \s -> [draw s],
             -- given state and an event, describe how to change state. the app
             -- is then redrawn
-            appHandleEvent = myAppHandleEvent,
+            appHandleEvent = handleEvent,
             -- returns an EventM that runs at app start, this is a demo,
             -- there's nothing to do at start, return
             appStartEvent = return,
