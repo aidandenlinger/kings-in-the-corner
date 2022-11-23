@@ -146,9 +146,7 @@ createPlayerHand sel hand =
         map (padLeftRight handPadding . cardWidget . show) hand
 
 draw :: GameState -> Widget ()
-draw (sel, place, _) =
-  topPiles
-    <=> playerHand
+draw (sel, place, _) = vBox [topPiles, playerHand]
   where
     topPiles = createTopPiles place [topPile, rightPile, bottomPile, leftPile]
     playerHand = createPlayerHand sel playerCards
