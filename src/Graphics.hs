@@ -126,12 +126,11 @@ vPadList :: Int -> [Widget ()] -> [Widget ()]
 vPadList _ [] = []
 vPadList p (w : ws) = w : map (padTop (Pad p)) ws
 
-draw :: GameState -> Widget ()
-draw (sel, place, _) =
-  topPiles
-    <=> playerHand
-  where
-    topPiles =
+-- This expects a list of four elements - top pile, right pile, bottom pile,
+-- left pile. This should be not hardcoded in the future
+createTopPiles :: Int -> [[Card]] -> Widget ()
+createTopPiles place piles
+  | length piles == 4 =
       vBox $
         vPadList (handPadding * 2) $
           map
@@ -140,10 +139,18 @@ draw (sel, place, _) =
               [leftWidget, cardWidget "deck", rightWidget],
               [cardWidget "bot\nleft", bottomWidget, cardWidget "bot\nrigh\nt"]
             ]
-      where
-        [topWidget, rightWidget, bottomWidget, leftWidget] =
-          modifyAt place placeCard $
-            map pileToOverlap [topPile, rightPile, bottomPile, leftPile]
+  where
+    [topWidget, rightWidget, bottomWidget, leftWidget] =
+      modifyAt place placeCard $
+        map pileToOverlap piles
+createTopPiles _ _ = error "hardcoded for four piles for now :)"
+
+draw :: GameState -> Widget ()
+draw (sel, place, _) =
+  topPiles
+    <=> playerHand
+  where
+    topPiles = createTopPiles place [topPile, rightPile, bottomPile, leftPile]
     playerHand =
       center $
         hBox $
