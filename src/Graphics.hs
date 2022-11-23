@@ -145,17 +145,20 @@ createTopPiles place piles
         map pileToOverlap piles
 createTopPiles _ _ = error "hardcoded for four piles for now :)"
 
+createPlayerHand :: Int -> [Card] -> Widget ()
+createPlayerHand sel hand =
+  center $
+    hBox $
+      modifyAt sel isSelected $
+        map (padAll handPadding . cardWidget . show) hand
+
 draw :: GameState -> Widget ()
 draw (sel, place, _) =
   topPiles
     <=> playerHand
   where
     topPiles = createTopPiles place [topPile, rightPile, bottomPile, leftPile]
-    playerHand =
-      center $
-        hBox $
-          modifyAt sel isSelected $
-            map (padAll handPadding . cardWidget . show) playerCards
+    playerHand = createPlayerHand sel playerCards
 
 gameStart :: IO ()
 gameStart = do
