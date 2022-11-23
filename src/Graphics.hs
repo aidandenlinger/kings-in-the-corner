@@ -4,13 +4,12 @@ import Brick
 import Brick.Widgets.Border (border)
 import Brick.Widgets.Border.Style as BS -- (unicodeRounded, bsVertical)
 import Brick.Widgets.Center
-import Brick.Widgets.Core (cropBottomBy, updateAttrMap, withBorderStyle)
 import CardTypes
 import Data.List (foldl1')
 import Data.List.Index (modifyAt)
 import Graphics.Vty (Event (..), Key (..))
 import Graphics.Vty.Attributes (Attr, defAttr)
-import Graphics.Vty.Attributes.Color (blue, green, red)
+import Graphics.Vty.Attributes.Color (blue, green)
 import System.Exit (exitSuccess)
 
 -- width, height of cards
