@@ -55,18 +55,6 @@ custom =
 cardWidget :: String -> Widget ()
 cardWidget = createCard center
 
-cardWidgetNorthSouth :: String -> Widget ()
-cardWidgetNorthSouth text = padLeftRight 30 $ cardStyle $ setAvailableSize cardSize $ center $ str text
-
-cardWidgetNorthSouthBottom :: String -> Widget ()
-cardWidgetNorthSouthBottom text = padLeftRight 30 $ cardStyle $ setAvailableSize (4, 2) $ center $ str text
-
-cardWidgetEastWest :: String -> Widget ()
-cardWidgetEastWest text = padLeftRight 13 $ cardStyle $ setAvailableSize cardSize $ center $ str text
-
-cardWidgetEastWestBottom :: String -> Widget ()
-cardWidgetEastWestBottom text = padLeftRight 13 $ cardStyle $ setAvailableSize (4, 2) $ center $ str text
-
 -- centers the text horizontally, then fills bottom to get full card shape
 cardWidgetHalf :: String -> Widget n
 cardWidgetHalf n =
@@ -100,14 +88,32 @@ handleEvent (sel, place, numCards) (VtyEvent (EvKey KUp _)) =
   continue (sel, (place + 1) `mod` 4, numCards)
 handleEvent (sel, place, numCards) (VtyEvent (EvKey KDown _)) =
   continue (sel, (place - 1) `mod` 4, numCards)
+-- Esc quits game
 handleEvent s (VtyEvent (EvKey KEsc [])) = halt s
+-- Everything else does not change state
 handleEvent s _ = continue s
 
+-- Example hands
 playerCards :: [Card]
 playerCards = [Card R5 Heart, Card R6 Club, Card R7 Heart]
 
-board :: [String]
-board = map show [Card R8 Spade, Card R9 Spade, Card R6 Club, Card RK Diamond, Card RQ Heart, Card RJ Diamond]
+topPile :: [Card]
+topPile = [Card R8 Spade, Card RK Diamond]
+
+leftPile :: [Card]
+leftPile = [Card R9 Spade, Card RK Diamond]
+
+rightPile :: [Card]
+rightPile = [Card R6 Club, Card RK Diamond]
+
+bottomPile :: [Card]
+bottomPile = [Card RK Diamond, Card RJ Diamond]
+
+pileToOverlap :: [Card] -> Widget ()
+pileToOverlap pile = vBox [cardWidgetHalf bottomCard, cardWidget topCard]
+  where
+    bottomCard = (show . last) pile
+    topCard = (show . head) pile
 
 -- Given a list of widgets, add that much space inbetween the elements
 -- horizontally.
@@ -127,20 +133,18 @@ draw (sel, place, _) =
     <=> playerHand
   where
     topPiles =
-      cropBottomBy 2 (cardWidgetNorthSouthBottom (board !! 3)) -- top pile, bottom card
-        <=> vBox (checkPlace 0 [cardWidgetNorthSouth (head board)]) -- top pile, top card
-        <=> ( cropBottomBy 2 (cardWidgetEastWestBottom (board !! 3)) -- left pile, bottom card
-                <+> cropBottomBy 2 (cardWidgetEastWestBottom (board !! 3)) -- right pile, bottom card
-            )
-        <=> ( hBox (checkPlace 3 [cardWidgetEastWest (board !! 1)]) -- left pile, top card
-                <+> hBox (checkPlace 1 [cardWidgetEastWest (board !! 2)]) -- right pile, top card
-            )
-        <=> cropBottomBy 2 (cardWidgetNorthSouthBottom (board !! 5)) -- bottom pile, bottom card
-        <=> vBox (checkPlace 2 [cardWidgetNorthSouth (board !! 3)]) -- bottom pile, top card
+      vBox $
+        vPadList (handPadding * 2) $
+          map
+            (hCenter . hBox . hPadList (handPadding * 9))
+            [ [cardWidget "top\nleft", topWidget, cardWidget "top\nrigh\nt"],
+              [leftWidget, cardWidget "deck", rightWidget],
+              [cardWidget "bot\nleft", bottomWidget, cardWidget "bot\nrigh\nt"]
+            ]
       where
-        checkPlace p w
-          | place == p = map placeCard w
-          | otherwise = w
+        [topWidget, rightWidget, bottomWidget, leftWidget] =
+          modifyAt place placeCard $
+            map pileToOverlap [topPile, rightPile, bottomPile, leftPile]
     playerHand =
       center $
         hBox $
