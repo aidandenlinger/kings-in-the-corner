@@ -34,6 +34,14 @@ cardStyle = withBorderStyle BS.unicodeRounded . border
 italicStyle :: Widget n -> Widget n
 italicStyle = withBorderStyle custom . border
 
+-- Don't use directly, used by cardWidget and cardWidgetHalf
+createCard :: (Widget n1 -> Widget n2) -> String -> Widget n2
+createCard centerFunc text =
+  cardStyle $
+    setAvailableSize cardSize $
+      centerFunc $
+        str text
+
 custom :: BS.BorderStyle
 custom =
   BS.BorderStyle
@@ -45,9 +53,8 @@ custom =
       BS.bsVertical = '/'
     }
 
--- takes in card text, centers it, makes it card size
 cardWidget :: String -> Widget ()
-cardWidget text = padTop Max $ padAll 1 $ italicStyle $ setAvailableSize cardSize $ center $ str text
+cardWidget = createCard center
 
 cardWidgetNorthSouth :: String -> Widget ()
 cardWidgetNorthSouth text = padLeftRight 30 $ cardStyle $ setAvailableSize cardSize $ center $ str text
@@ -60,6 +67,14 @@ cardWidgetEastWest text = padLeftRight 13 $ cardStyle $ setAvailableSize cardSiz
 
 cardWidgetEastWestBottom :: String -> Widget ()
 cardWidgetEastWestBottom text = padLeftRight 13 $ cardStyle $ setAvailableSize (4, 2) $ center $ str text
+
+-- centers the text horizontally, then fills bottom to get full card shape
+cardWidgetHalf :: String -> Widget n
+cardWidgetHalf n =
+  cropBottomTo halfCardHeight $
+    createCard (padBottom Max . hCenter) n
+  where
+    halfCardHeight = max 2 (cardHeight `div` 2)
 
 -- attributes that widgets can use
 attrs :: [(AttrName, Attr)]
