@@ -109,6 +109,18 @@ playerCards = [Card R5 Heart, Card R6 Club, Card R7 Heart]
 board :: [String]
 board = map show [Card R8 Spade, Card R9 Spade, Card R6 Club, Card RK Diamond, Card RQ Heart, Card RJ Diamond]
 
+-- Given a list of widgets, add that much space inbetween the elements
+-- horizontally.
+hPadList :: Int -> [Widget ()] -> [Widget ()]
+hPadList _ [] = []
+hPadList p (w : ws) = w : map (padLeft (Pad p)) ws
+
+-- Given a list of widgets, add that much space inbetween the elements
+-- vertically.
+vPadList :: Int -> [Widget ()] -> [Widget ()]
+vPadList _ [] = []
+vPadList p (w : ws) = w : map (padTop (Pad p)) ws
+
 draw :: GameState -> Widget ()
 draw (sel, place, _) =
   topPiles
