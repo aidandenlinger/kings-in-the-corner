@@ -32,6 +32,16 @@ cardStyle = withBorderStyle BS.unicodeRounded . border
 
 italicStyle :: Widget n -> Widget n
 italicStyle = withBorderStyle custom . border
+  where
+    custom =
+      BS.BorderStyle
+        { BS.bsCornerTL = '╒',
+          BS.bsCornerTR = '╕',
+          BS.bsCornerBR = '╛',
+          BS.bsCornerBL = '╘',
+          BS.bsHorizontal = '─',
+          BS.bsVertical = '/'
+        }
 
 -- Don't use directly, used by cardWidget and cardWidgetHalf
 createCard :: (Widget n1 -> Widget n2) -> String -> Widget n2
@@ -40,17 +50,6 @@ createCard centerFunc text =
     setAvailableSize cardSize $
       centerFunc $
         str text
-
-custom :: BS.BorderStyle
-custom =
-  BS.BorderStyle
-    { BS.bsCornerTL = '╒',
-      BS.bsCornerTR = '╕',
-      BS.bsCornerBR = '╛',
-      BS.bsCornerBL = '╘',
-      BS.bsHorizontal = '─',
-      BS.bsVertical = '/'
-    }
 
 cardWidget :: String -> Widget ()
 cardWidget = createCard center
