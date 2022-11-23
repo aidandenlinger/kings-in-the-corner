@@ -117,8 +117,8 @@ bottomPile = [Card RK Diamond, Card RJ Diamond]
 pileToOverlap :: [Card] -> Widget ()
 pileToOverlap pile = vBox [cardWidgetHalf bottomCard, cardWidget topCard]
   where
-    bottomCard = (show . last) pile
-    topCard = (show . head) pile
+    bottomCard = show (last pile)
+    topCard = show (head pile)
 
 -- This expects a list of four elements - top pile, right pile, bottom pile,
 -- left pile. This should be not hardcoded in the future
