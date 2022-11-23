@@ -108,7 +108,7 @@ draw (sel, place, _) =
         checkPlace p w
           | place == p = map placeCard w
           | otherwise = w
-    playerHand = padLeftRight 20 (foldl1' (<+>) (modifyAt sel isSelected (map (cardWidget . show) playerCards))) -- player hand
+    playerHand = center (foldl1' (<+>) (modifyAt sel isSelected (map (cardWidget . show) playerCards))) -- player hand
 
 gameStart :: IO ()
 gameStart = do
