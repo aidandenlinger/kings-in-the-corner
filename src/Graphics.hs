@@ -82,8 +82,8 @@ myAppHandleEvent (sel, _, numCards) (MouseDown {}) =
   continue ((sel + 1) `mod` numCards, 0, numCards)
 myAppHandleEvent s _ = continue s
 
-playerCards :: [String]
-playerCards = map show [Card R5 Heart, Card R6 Club, Card R7 Heart]
+playerCards :: [Card]
+playerCards = [Card R5 Heart, Card R6 Club, Card R7 Heart]
 
 board :: [String]
 board = map show [Card R8 Spade, Card R9 Spade, Card R6 Club, Card RK Diamond, Card RQ Heart, Card RJ Diamond]
@@ -108,7 +108,7 @@ draw (sel, place, _) =
         checkPlace p w
           | place == p = map placeCard w
           | otherwise = w
-    playerHand = padLeftRight 20 (foldl1' (<+>) (modifyAt sel isSelected (map cardWidget playerCards))) -- player hand
+    playerHand = padLeftRight 20 (foldl1' (<+>) (modifyAt sel isSelected (map (cardWidget . show) playerCards))) -- player hand
 
 gameStart :: IO ()
 gameStart = do
