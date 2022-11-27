@@ -29,6 +29,33 @@ assignColor Spade   = Black
 assignColor Club    = Black
 assignColor _       = Red
 
+-- attempt to write/modify canPlace
+
+canPlace :: Card -> Pile -> Bool -- says whether a card can be placed on a pile
+-- given an empty Corner pile, a card needs to match both biases
+canPlace (Card r  s ) Pile { _pileType = CornerP
+                           , _cards    = []
+                           , _rankBias = Just rb
+                           , _suitBias = Just sb
+                           } = (r == rb) && (s == sb)
+-- Not sure if we need suitBias in the above function. But this looks similar to the Ace foundation in solitare.
+
+-- nonempty corner piles reject Kings (not needed?)
+canPlace (Card RK _ ) Pile { _pileType = CornerP
+                           , _cards    = (dc:_)
+                           } = False
+
+-- nonempty center piles accept cards if they alternate color and descend rank
+canPlace (Card r  s ) Pile { _pileType = CenterP
+                           , _cards    = (DCard{_card=Card r' s'}:_)
+                           , _rankBias = Just rb
+                           } = (succ r == r') && (assignColor s /= assignColor s')
+
+-- center piles reject kings
+canPlace (Card RK _ ) Pile { _pileType = CenterP
+                           , _cards    = _
+                           } = False
+
 -- Initialize game state for a new game
 
 allRanks :: [Rank]
