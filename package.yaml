@@ -39,6 +39,9 @@ library:
   - brick
   - microlens-platform
   - random
+  - text
+  - vty
+  - ilist
 
 executables:
   kings-in-the-corner-exe:
