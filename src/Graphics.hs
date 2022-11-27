@@ -63,9 +63,9 @@ createTopPiles place piles
               . map (padLeftRight pileHorizPadding)
           )
           -- TODO: fill corner and middle decks with real values
-          [ [cardWidget "top\nleft", topWidget, cardWidget "top\nrigh\nt"],
+          [ [ (cardWidgetItalic "top\nleft"), topWidget, (cardWidgetItalic "top\nrigh\nt")],
             [leftWidget, cardWidget "deck", rightWidget],
-            [cardWidget "bot\nleft", bottomWidget, cardWidget "bot\nrigh\nt"]
+            [translateBy (Location(0,2)) (cardWidgetItalic "bot\nleft"), bottomWidget, translateBy (Location(0,2)) (cardWidgetItalic "bot\nrigh\nt")]
           ]
   where
     [topWidget, rightWidget, bottomWidget, leftWidget] =
@@ -99,8 +99,17 @@ createCard centerFunc text =
       centerFunc $
         str text
 
+createCardItalic :: (Widget n1 -> Widget n2) -> String -> Widget n2
+createCardItalic centerFunc text =
+  italicStyle $
+    setAvailableSize cardSize $
+      centerFunc $
+        str text
 cardWidget :: String -> Widget ()
 cardWidget = createCard center
+
+cardWidgetItalic :: String -> Widget ()
+cardWidgetItalic = createCardItalic center
 
 -- centers the text horizontally, then fills bottom to get full card shape
 cardWidgetHalf :: String -> Widget n
@@ -120,14 +129,13 @@ italicStyle :: Widget n -> Widget n
 italicStyle = withBorderStyle custom . border
   where
     custom =
-      BS.BorderStyle
-        { BS.bsCornerTL = '╒',
-          BS.bsCornerTR = '╕',
-          BS.bsCornerBR = '╛',
-          BS.bsCornerBL = '╘',
-          BS.bsHorizontal = '─',
-          BS.bsVertical = '/'
-        }
+      BS.BorderStyle   { BS.bsCornerTL = toEnum 0x256D
+                  , BS.bsCornerTR = toEnum 0x256E
+                  , BS.bsCornerBR = toEnum 0x256F
+                  , BS.bsCornerBL = toEnum 0x2570
+                  , BS.bsHorizontal = '─'
+                  , BS.bsVertical = '#'
+                   }
 
 -- attributes that widgets can use
 attrs :: [(AttrName, Attr)]
