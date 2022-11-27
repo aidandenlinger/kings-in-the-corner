@@ -51,10 +51,18 @@ canPlace (Card r  s ) Pile { _pileType = CenterP
                            , _rankBias = Just rb
                            } = (succ r == r') && (assignColor s /= assignColor s')
 
+-- nonempty corner piles accept cards if they alternate color and descend rank
+canPlace (Card r  s ) Pile { _pileType = CornerP
+                           , _cards    = (DCard{_card=Card r' s'}:_)
+                           , _rankBias = Just rb
+                           } = (succ r == r') && (assignColor s /= assignColor s')
+
 -- center piles reject kings
 canPlace (Card RK _ ) Pile { _pileType = CenterP
                            , _cards    = _
                            } = False
+
+
 
 -- Initialize game state for a new game
 
