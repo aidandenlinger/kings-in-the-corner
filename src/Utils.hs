@@ -63,7 +63,7 @@ canPlace (Card RK _ ) Pile { _pileType = CenterP
                            } = False
 
 canPlace Pile { _pileType = CenterP
-                           , _cards    = (reverse (DCard{_card=Card r' s'}:_))
+                           , _cards    = (reverse (DCard{_card=Card r s}:_))
                            , _rankBias = _
                            } Pile { _pileType = _
                            , _cards    = (DCard{_card=Card r' s'}:_)
