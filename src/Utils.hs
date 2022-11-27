@@ -62,7 +62,13 @@ canPlace (Card RK _ ) Pile { _pileType = CenterP
                            , _cards    = _
                            } = False
 
-
+canPlace Pile { _pileType = CenterP
+                           , _cards    = (reverse (DCard{_card=Card r' s'}:_))
+                           , _rankBias = _
+                           } Pile { _pileType = _
+                           , _cards    = (DCard{_card=Card r' s'}:_)
+                           , _rankBias = _
+                           } = (succ r == r') && (assignColor s /= assignColor s')
 
 -- Initialize game state for a new game
 
