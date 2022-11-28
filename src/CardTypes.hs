@@ -99,6 +99,8 @@ data GSt = GSt { _field   :: Field            -- Current state of decks
                , _seed    :: R.StdGen         -- A random seed to be passed thru
                , _history :: [(Field, Int)]   -- List of previous fields and corresponding player ids
                , _toplay  :: Int              -- Player id of the one with next move
+               , _selcds  :: Maybe DCard      -- A card if selected in the graphics
+               , _selpile :: Maybe Pile       -- A pile if selected in the graphics
                } deriving (Show)
 
 -- DISPLAY TYPES ---------------------------------------------------------------
