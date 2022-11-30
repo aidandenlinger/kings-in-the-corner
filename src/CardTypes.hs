@@ -76,6 +76,7 @@ data PileType    = PlayerP | DrawP | CenterP | CornerP deriving (Eq, Show)
 -- Data type for pile of cards.X
 
 data Pile = Pile { _cards    :: [DCard]     --   List of cards in the pile in order
+                 , _rcards   :: [DCard]     -- , Reverse of the list of cards in the pile
                  , _display  :: DisplayMode -- , opinions on how to be drawn
                  , _rankBias :: Maybe Rank  -- , Rank of top card
                  , _suitBias :: Maybe Suit  -- , Suit of top card
