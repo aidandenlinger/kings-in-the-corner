@@ -89,8 +89,8 @@ canPlacePile Pile { _pileType = CenterP
 canPlacePile _ _ = False -- if not covered above, default invalid
 
 -- if a game is won, a player hand pile cards has length 0
--- hasWon :: GSt -> Int -> Bool
--- hasWon s idx = length (((getPHands s) !! idx ) . cards) == 0
+hasWon :: GSt -> Int -> Bool
+hasWon s idx = length ((getPHands s) !! idx . cards) == 0
 
 test :: GSt -> Int -> Pile
 test s idx = (getPHands s) !! idx
