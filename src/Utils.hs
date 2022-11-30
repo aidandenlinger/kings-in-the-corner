@@ -77,6 +77,9 @@ canPlacePile Pile { _pileType = CenterP
 
 canPlacePile _ _ = False -- if not covered above, default invalid
 
+-- if a game is won, all 52 cards are in the foundation
+hasWon :: GSt -> Bool
+hasWon s = length (s ^. field . phands . traverse . cards) == 0
 
 -- Initialize game state for a new game
 
