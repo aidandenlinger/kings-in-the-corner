@@ -62,8 +62,12 @@ canPlace (Card RK _ ) Pile { _pileType = CenterP
                            , _cards    = _
                            } = False
 
+canPlace _ _ = False -- if not covered above, default invalid
+
+
+canPlacePile :: Pile -> Pile -> Bool -- says whether a Pile can be placed on a pile
 -- piles over another pile
-canPlace Pile { _pileType = CenterP
+canPlacePile Pile { _pileType = CenterP
                            , _rcards    = (DCard{_card=Card r s}:_)
                            , _rankBias = _
                            } Pile { _pileType = _
@@ -71,7 +75,8 @@ canPlace Pile { _pileType = CenterP
                            , _rankBias = _
                            } = (succ r == r') && (assignColor s /= assignColor s')
 
-canPlace _ _ = False -- if not covered above, default invalid
+canPlacePile _ _ = False -- if not covered above, default invalid
+
 
 -- Initialize game state for a new game
 
