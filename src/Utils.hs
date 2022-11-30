@@ -88,10 +88,12 @@ canPlacePile Pile { _pileType = CenterP
 
 canPlacePile _ _ = False -- if not covered above, default invalid
 
--- if a game is won, all 52 cards are in the foundation
-hasWon :: GSt -> Int -> Bool
-hasWon s idx = length (((getPHands s) !! idx ) . cards) == 0
+-- if a game is won, a player hand pile cards has length 0
+-- hasWon :: GSt -> Int -> Bool
+-- hasWon s idx = length (((getPHands s) !! idx ) . cards) == 0
 
+test :: GSt -> Int -> Pile
+test s idx = (getPHands s) !! idx
 -- Initialize game state for a new game
 
 allRanks :: [Rank]
