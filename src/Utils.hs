@@ -90,7 +90,7 @@ canPlacePile _ _ = False -- if not covered above, default invalid
 
 -- if a game is won, all 52 cards are in the foundation
 hasWon :: GSt -> Int -> Bool
-hasWon s idx = length ((getPHands s) !! idx ) == 0
+hasWon s idx = length (((getPHands s) !! idx ) . cards) == 0
 
 -- Initialize game state for a new game
 
