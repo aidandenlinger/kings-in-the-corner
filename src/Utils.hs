@@ -92,8 +92,6 @@ canPlacePile _ _ = False -- if not covered above, default invalid
 hasWon :: GSt -> Int -> Bool
 hasWon s idx = length (((getPHands s) !! idx) ^. cards) == 0
 
-test :: GSt -> Int -> Pile
-test s idx = (getPHands s) !! idx
 -- Initialize game state for a new game
 
 allRanks :: [Rank]
