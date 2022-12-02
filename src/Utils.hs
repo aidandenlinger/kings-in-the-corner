@@ -100,8 +100,8 @@ makeMove move gamestate
     | move ^. moveP = [newsp_case2, newtp_case2]
     | otherwise = [newsp_case1, newtp_case1]
     where 
-      sPile = (gamestate ^. field . (move . sPile) ) !! (move ^. _sidx)
-      tPile = (gamestate ^. field . (move . tPile) ) !! (move ^. _tidx)
+      sPile = (gamestate ^. field . (move . sPile) ) !! (move . _sidx)
+      tPile = (gamestate ^. field . (move . tPile) ) !! (move . _tidx)
       sp@(x:xs) = sPile . cards
       tp = tPile . cards
       newtp_cards = x:tp
