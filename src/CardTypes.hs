@@ -11,6 +11,7 @@ module CardTypes
   , PileType(..)
   , Rank(..) 
   , Suit(..)
+  , Move(..)
   ) where
 
 import qualified System.Random as R (StdGen)
@@ -117,3 +118,11 @@ data Axis   = NS | EW deriving (Eq, Show) -- data type for pile splay orientatio
 -- data Ext = StockX | WasteX | TableX | FoundX -- named extents for click regions
 --          | IdX Int | DCX DCard | ActionX Action
 --   deriving (Eq, Show, Ord)
+
+data Move = Move { _moveP :: Bool,
+                   _sPile :: PileType,
+                   _sidx  :: Int,
+                   _scidx :: Int, -- only if a card from player hand is to be moved
+                   _tPile :: PileType,
+                   _tidx  :: Int
+               } deriving (Show)
