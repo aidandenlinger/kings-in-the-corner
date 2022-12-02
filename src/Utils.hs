@@ -5,11 +5,12 @@ module Utils
     initialDeal,
     genPlPile,
     initGSt,
-    getPHands
+    getPHands,
+    updateToPlay
   ) where
 
 import Data.List.Split (splitPlaces)
-import Lens.Micro ( (^.), (%~), (&), (.~), (^?!), _head )
+import Lens.Micro ( (^.), (%~), (&), (.~), (^?!), _head, set )
 import Lens.Micro.TH (makeLenses)
 import qualified System.Random         as R (next, StdGen)
 import qualified System.Random.Shuffle as R (shuffle')
@@ -39,6 +40,17 @@ assignColor :: Suit -> Color
 assignColor Spade   = Black
 assignColor Club    = Black
 assignColor _       = Red
+
+-- A set of update functions to allow for game state modification
+
+updateToPlay :: Int -> GSt -> GSt
+updateToPlay pId stState = stState & toplay .~ pId
+
+updateSelCard :: Maybe DCard -> GSt -> GSt
+updateSelCard sCard stState = stState & selcd .~ sCard
+
+updateSelPile :: Maybe Pile -> GSt -> GSt
+updateSelPile sPile stState = stState & selpile .~ sPile
 
 -- Initialize game state for a new game
 
@@ -113,7 +125,7 @@ initGSt nPlayers seedval = GSt { _field   = fieldval,
                                  _seed    = seedval,
                                  _history = [],
                                  _toplay  = 0,
-                                 _selcds  = Nothing,
+                                 _selcd   = Nothing,
                                  _selpile = Nothing
                                }
   where
