@@ -38,10 +38,14 @@ library:
   dependencies:
   - brick
   - microlens-platform
+  - microlens-th
+  - microlens
+  - random-shuffle
   - random
   - text
   - vty
   - ilist
+  - split
 
 executables:
   kings-in-the-corner-exe:
