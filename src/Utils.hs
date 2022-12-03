@@ -125,6 +125,7 @@ initGSt nPlayers seedval = GSt { _field   = fieldval,
                                  _seed    = seedval,
                                  _history = [],
                                  _toplay  = 0,
+                                 _lookcd  = 0,
                                  _selcd   = Nothing,
                                  _selpile = Nothing
                                }
