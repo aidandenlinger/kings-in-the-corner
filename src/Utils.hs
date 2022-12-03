@@ -96,26 +96,26 @@ hasWon s idx = length (((getPHands s) !! idx) ^. cards) == 0
 
 --Movement function
 
-makeMove :: Move -> GSt -> [Pile]
-makeMove move gamestate 
-    | move ^. moveP = [newsp_case2, newtp_case2]
-    | otherwise = [newsp_case1, newtp_case1]
-    where 
-      sPile = (gamestate ^. field . (move . sPile) ) !! (move . sidx)
-      tPile = (gamestate ^. field . (move . tPile) ) !! (move . tidx)
-      sp@(x:xs) = sPile . cards
-      tp = tPile . cards
-      newtp_cards = x:tp
-      newsp_cards = xs
-      newsp_case1 = sPile
-      newsp_case1 ^. cards = newsp_cards
-      newtp_case1 = sPile
-      newtp_case1 ^. cards = newsp_cards
-      comb_cards = sp ++ tp
-      newsp_case2 = sPile
-      newsp_case2 ^. cards = []
-      newtp_case2 = sPile
-      newtp_case2 ^. cards = comb_cards
+-- makeMove :: Move -> GSt -> [Pile]
+-- makeMove move gamestate 
+--     | move ^. moveP = [newsp_case2, newtp_case2]
+--     | otherwise = [newsp_case1, newtp_case1]
+--     where 
+--       sPile = (gamestate ^. field . (move . sPile) ) !! (move . sidx)
+--       tPile = (gamestate ^. field . (move . tPile) ) !! (move . tidx)
+--       sp@(x:xs) = sPile . cards
+--       tp = tPile . cards
+--       newtp_cards = x:tp
+--       newsp_cards = xs
+--       newsp_case1 = sPile
+--       newsp_case1 ^. cards = newsp_cards
+--       newtp_case1 = sPile
+--       newtp_case1 ^. cards = newsp_cards
+--       comb_cards = sp ++ tp
+--       newsp_case2 = sPile
+--       newsp_case2 ^. cards = []
+--       newtp_case2 = sPile
+--       newtp_case2 ^. cards = comb_cards
       
           
 
