@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Lib
+import Graphics (gameStart)
 
 main :: IO ()
-main = start
+main = gameStart
