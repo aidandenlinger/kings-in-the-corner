@@ -91,8 +91,8 @@ data Pile = Pile { _cards    :: [DCard]     --   List of cards in the pile in or
 -- Data type for the complete field
 
 data Field = Field { _draw    :: Pile
-                   , _center  :: [Pile]
-                   , _corner  :: [Pile]
+                   , _centerPiles  :: [Pile]
+                   , _cornerPiles  :: [Pile]
                    , _phands  :: [Pile]
                    } deriving (Eq, Show)
 
