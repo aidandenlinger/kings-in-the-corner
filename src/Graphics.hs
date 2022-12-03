@@ -1,7 +1,7 @@
 module Graphics (gameStart) where
 
 import Brick
-import Brick.Widgets.Border (border)
+import Brick.Widgets.Border (border, borderWithLabel, vBorder)
 import Brick.Widgets.Border.Style as BS
 import Brick.Widgets.Center
 import CardTypes
@@ -33,13 +33,13 @@ pileHorizPadding = 4
 pileVertPadding :: Int
 pileVertPadding = 0
 
-type GameState = (Int, Int, Int)
+type GameState = (Int, Int, Int, (Int, Int))
 
 --- MAIN DRAW FUNCTION
 
 -- Given the GameState, return the widget to draw
 draw :: GameState -> Widget ()
-draw (sel, place, _) = vBox [topPiles, playerHand]
+draw (sel, place, _, _) = vBox [topPiles, playerHand]
   where
     -- TODO: Don't use hardcoded values, get piles from gamestate
     topPiles = createTopPiles place [topPile, rightPile, bottomPile, leftPile]
@@ -64,7 +64,7 @@ createTopPiles place piles
           )
           -- TODO: fill corner and middle decks with real values
           [ [ (cardWidgetItalic "top\nleft"), topWidget, (cardWidgetItalic "top\nrigh\nt")],
-            [leftWidget, cardWidget "deck", rightWidget],
+            [leftWidget, translateBy (Location(0,1)) (cardWidget "deck"), rightWidget],
             [translateBy (Location(0,2)) (cardWidgetItalic "bot\nleft"), bottomWidget, translateBy (Location(0,2)) (cardWidgetItalic "bot\nrigh\nt")]
           ]
   where
@@ -134,7 +134,7 @@ italicStyle = withBorderStyle custom . border
                   , BS.bsCornerBR = toEnum 0x256F
                   , BS.bsCornerBL = toEnum 0x2570
                   , BS.bsHorizontal = '─'
-                  , BS.bsVertical = '#'
+                  , BS.bsVertical = '•'
                    }
 
 -- attributes that widgets can use
@@ -169,19 +169,29 @@ bottomPile = [Card RK Diamond, Card RJ Diamond]
 
 handleEvent :: GameState -> BrickEvent n e -> EventM n (Next GameState)
 -- Left and Right move between player cards
-handleEvent (sel, place, numCards) (VtyEvent (EvKey KLeft _)) =
-  continue ((sel - 1) `mod` numCards, place, numCards)
-handleEvent (sel, place, numCards) (VtyEvent (EvKey KRight _)) =
-  continue ((sel + 1) `mod` numCards, place, numCards)
+handleEvent (sel, place, numCards, r) (VtyEvent (EvKey KLeft _)) =
+  continue ((sel - 1) `mod` numCards, place, numCards, r)
+handleEvent (sel, place, numCards, r) (VtyEvent (EvKey KRight _)) =
+  continue ((sel + 1) `mod` numCards, place, numCards, r)
 -- Up and Down move between decks
-handleEvent (sel, place, numCards) (VtyEvent (EvKey KUp _)) =
-  continue (sel, (place + 1) `mod` 4, numCards)
-handleEvent (sel, place, numCards) (VtyEvent (EvKey KDown _)) =
-  continue (sel, (place - 1) `mod` 4, numCards)
+handleEvent (sel, place, numCards, r) (VtyEvent (EvKey KUp _)) =
+  continue (sel, (place + 1) `mod` 4, numCards, r)
+handleEvent (sel, place, numCards, r) (VtyEvent (EvKey KDown _)) =
+  continue (sel, (place - 1) `mod` 4, numCards, r)
+handleEvent (sel, place, numCards, r) (VtyEvent (EvKey KEnter _)) =
+  continue (sel, place, numCards, (50, 50))
 -- Esc quits game
 handleEvent s (VtyEvent (EvKey KEsc [])) = halt s
 -- Everything else does not change state
 handleEvent s _ = continue s
+
+ui :: GameState -> Widget ()
+ui (sel, place, _, (r1, r2)) =
+    translateBy (Location(r1, r2)) $
+    joinBorders $
+    withBorderStyle BS.unicode $
+    borderWithLabel (str "Kings in the Corner") $
+    (center (str "Left") <+> vBorder <+> center (str "Right"))
 
 --- GAME START
 
@@ -190,7 +200,7 @@ gameStart = do
   let app =
         App
           { -- given a state, return list of widgets to draw.
-            appDraw = \s -> [draw s],
+            appDraw = \s -> [ui s, draw s],
             -- given state and an event, describe how to change state. the app
             -- is then redrawn
             appHandleEvent = handleEvent,
@@ -205,6 +215,6 @@ gameStart = do
   -- use defaultMain to start our app
   -- ignore the final returned state for now, because this app doesn't store
   -- anything
-  _ <- defaultMain app (0, 0, length playerCards)
+  _ <- defaultMain app (0, 0, length playerCards, (0, 0))
   -- exit once done, don't check anything
   exitSuccess
