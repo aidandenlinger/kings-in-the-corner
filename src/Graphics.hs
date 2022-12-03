@@ -191,7 +191,7 @@ ui (sel, place, _, (r1, r2)) =
     joinBorders $
     withBorderStyle BS.unicode $
     borderWithLabel (str "Kings in the Corner") $
-    (center (str "Left") <+> vBorder <+> center (str "Right"))
+    (center ((str "How to play Kings in the Corner\nWill fill in soon\n") <=> (str "Press Enter to begin playing")) <+> vBorder <+> center (translateBy (Location(9, 0)) (cardWidget "♥️") <=> ((padLeftRight 4 (cardWidget "K♠")) <+> cardWidget "K♣︎") <=> translateBy (Location(9, 0)) (cardWidget "♦️")))
 
 --- GAME START
 
