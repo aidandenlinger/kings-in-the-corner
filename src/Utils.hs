@@ -130,7 +130,7 @@ initGSt nPlayers seedval = GSt { _field   = fieldval,
                                }
   where
     deal      = R.shuffle' initialDeal 52 seedval -- Shuffle the initial deal
-    fieldval  = Field { _draw = drawval,
+    fieldval  = Field { _drawPile = drawval,
                         _centerPiles = centerval, 
                         _cornerPiles = cornerval,
                         _phands = phandsval

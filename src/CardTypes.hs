@@ -90,7 +90,7 @@ data Pile = Pile { _cards    :: [DCard]     --   List of cards in the pile in or
 
 -- Data type for the complete field
 
-data Field = Field { _draw    :: Pile
+data Field = Field { _drawPile    :: Pile
                    , _centerPiles  :: [Pile]
                    , _cornerPiles  :: [Pile]
                    , _phands  :: [Pile]
