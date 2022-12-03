@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Graphics (gameStart) where
 
 import Brick
@@ -9,7 +11,18 @@ import Data.List.Index (modifyAt)
 import Graphics.Vty (Event (..), Key (..))
 import Graphics.Vty.Attributes (Attr, defAttr)
 import Graphics.Vty.Attributes.Color (blue, green)
+import Lens.Micro
+import Lens.Micro.TH (makeLenses)
 import System.Exit (exitSuccess)
+import System.Random (initStdGen)
+import Utils
+
+--- LENSES
+
+makeLenses ''DCard
+makeLenses ''Pile
+makeLenses ''Field
+makeLenses ''GSt
 
 --- CONSTANTS
 
@@ -33,17 +46,17 @@ pileHorizPadding = 4
 pileVertPadding :: Int
 pileVertPadding = 0
 
-type GameState = (Int, Int, Int)
+type GameState = GSt
 
 --- MAIN DRAW FUNCTION
 
 -- Given the GameState, return the widget to draw
 draw :: GameState -> Widget ()
-draw (sel, place, _) = vBox [topPiles, playerHand]
+draw gs = vBox [topPiles, playerHand]
   where
-    -- TODO: Don't use hardcoded values, get piles from gamestate
-    topPiles = createTopPiles place [topPile, rightPile, bottomPile, leftPile]
-    playerHand = createPlayerHand sel playerCards
+    -- TODO: Don't hardcode selected pile
+    topPiles = createTopPiles 0 (gs ^. field)
+    playerHand = createPlayerHand (gs ^. lookcd) (map (^. card) (((gs ^. field . phands) !! (gs ^. toplay)) ^. cards))
 
 --- PILES
 
@@ -52,26 +65,28 @@ draw (sel, place, _) = vBox [topPiles, playerHand]
 -- This expects a list of four elements - top pile, right pile, bottom pile,
 -- left pile. TODO: better datatype in the future, order shouldn't matter
 -- TODO: Don't use an Int to signify what pile we're pointing at, use an enum
-createTopPiles :: Int -> [[Card]] -> Widget ()
-createTopPiles place piles
-  | length piles == 4 =
-      vBox $
-        map
-          ( padTopBottom pileVertPadding
-              . hCenter
-              . hBox
-              . map (padLeftRight pileHorizPadding)
-          )
-          -- TODO: fill corner and middle decks with real values
-          [ [ (cardWidgetItalic "top\nleft"), topWidget, (cardWidgetItalic "top\nrigh\nt")],
-            [leftWidget, cardWidget "deck", rightWidget],
-            [translateBy (Location(0,2)) (cardWidgetItalic "bot\nleft"), bottomWidget, translateBy (Location(0,2)) (cardWidgetItalic "bot\nrigh\nt")]
-          ]
+-- TODO: Don't just always select 1st pile
+createTopPiles :: Int -> Field -> Widget ()
+createTopPiles place piles =
+  vBox $
+    map
+      ( padTopBottom pileVertPadding
+          . hCenter
+          . hBox
+          . map (padLeftRight pileHorizPadding)
+      )
+      -- TODO: fill corner and middle decks with real values
+      [ [(cardWidgetItalic "top\nleft"), topWidget, (cardWidgetItalic "top\nrigh\nt")],
+        [leftWidget, cardWidget "deck", rightWidget],
+        [translateBy (Location (0, 2)) (cardWidgetItalic "bot\nleft"), bottomWidget, translateBy (Location (0, 2)) (cardWidgetItalic "bot\nrigh\nt")]
+      ]
   where
     [topWidget, rightWidget, bottomWidget, leftWidget] =
       modifyAt place placeCard $
-        map pileToOverlap piles
-createTopPiles _ _ = error "hardcoded for four piles for now :)"
+        map pileToOverlap centerPileCards
+
+    centerPileCards :: [[Card]]
+    centerPileCards = map (map (^. card) . (^. cards)) (piles ^. centerPiles)
 
 --- Given a pile, return a widget showing the top and bottom card of the pile
 pileToOverlap :: [Card] -> Widget ()
@@ -105,6 +120,7 @@ createCardItalic centerFunc text =
     setAvailableSize cardSize $
       centerFunc $
         str text
+
 cardWidget :: String -> Widget ()
 cardWidget = createCard center
 
@@ -129,13 +145,14 @@ italicStyle :: Widget n -> Widget n
 italicStyle = withBorderStyle custom . border
   where
     custom =
-      BS.BorderStyle   { BS.bsCornerTL = toEnum 0x256D
-                  , BS.bsCornerTR = toEnum 0x256E
-                  , BS.bsCornerBR = toEnum 0x256F
-                  , BS.bsCornerBL = toEnum 0x2570
-                  , BS.bsHorizontal = '─'
-                  , BS.bsVertical = '#'
-                   }
+      BS.BorderStyle
+        { BS.bsCornerTL = toEnum 0x256D,
+          BS.bsCornerTR = toEnum 0x256E,
+          BS.bsCornerBR = toEnum 0x256F,
+          BS.bsCornerBL = toEnum 0x2570,
+          BS.bsHorizontal = '─',
+          BS.bsVertical = '#'
+        }
 
 -- attributes that widgets can use
 attrs :: [(AttrName, Attr)]
@@ -149,35 +166,23 @@ isSelected = withAttr (attrName "selected_card")
 placeCard :: Widget n -> Widget n
 placeCard = withAttr (attrName "place_card")
 
--- Example hands
-playerCards :: [Card]
-playerCards = [Card R5 Heart, Card R6 Club, Card R7 Heart]
-
-topPile :: [Card]
-topPile = [Card R8 Spade, Card RK Diamond]
-
-leftPile :: [Card]
-leftPile = [Card R9 Spade, Card RK Diamond]
-
-rightPile :: [Card]
-rightPile = [Card R6 Club, Card RK Diamond]
-
-bottomPile :: [Card]
-bottomPile = [Card RK Diamond, Card RJ Diamond]
-
 --- EVENT HANDLING
 
 handleEvent :: GameState -> BrickEvent n e -> EventM n (Next GameState)
 -- Left and Right move between player cards
-handleEvent (sel, place, numCards) (VtyEvent (EvKey KLeft _)) =
-  continue ((sel - 1) `mod` numCards, place, numCards)
-handleEvent (sel, place, numCards) (VtyEvent (EvKey KRight _)) =
-  continue ((sel + 1) `mod` numCards, place, numCards)
+handleEvent gs (VtyEvent (EvKey KRight _)) =
+  continue $ over lookcd (\b -> (b + 1) `mod` playerHandLength) gs
+  where
+    playerHandLength = length $ ((gs ^. field . phands) !! (gs ^. toplay)) ^. cards
+handleEvent gs (VtyEvent (EvKey KLeft _)) =
+  continue $ over lookcd (\b -> (b - 1) `mod` playerHandLength) gs
+  where
+    playerHandLength = length $ ((gs ^. field . phands) !! (gs ^. toplay)) ^. cards
 -- Up and Down move between decks
-handleEvent (sel, place, numCards) (VtyEvent (EvKey KUp _)) =
-  continue (sel, (place + 1) `mod` 4, numCards)
-handleEvent (sel, place, numCards) (VtyEvent (EvKey KDown _)) =
-  continue (sel, (place - 1) `mod` 4, numCards)
+-- handleEvent (sel, place, numCards) (VtyEvent (EvKey KUp _)) =
+--   continue (sel, (place + 1) `mod` 4, numCards)
+-- handleEvent (sel, place, numCards) (VtyEvent (EvKey KDown _)) =
+--   continue (sel, (place - 1) `mod` 4, numCards)
 -- Esc quits game
 handleEvent s (VtyEvent (EvKey KEsc [])) = halt s
 -- Everything else does not change state
@@ -202,9 +207,10 @@ gameStart = do
             -- don't show cursor
             appChooseCursor = neverShowCursor
           }
-  -- use defaultMain to start our app
-  -- ignore the final returned state for now, because this app doesn't store
-  -- anything
-  _ <- defaultMain app (0, 0, length playerCards)
+  -- Start a two player game from a random generator
+  finalState <- defaultMain app . initGSt 2 <$> initStdGen
+  final <- finalState -- need to access the gamestate,
+                      -- otherwise haskell will be lazy
+                      -- and not run the game at all :)
   -- exit once done, don't check anything
   exitSuccess
