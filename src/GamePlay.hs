@@ -30,13 +30,28 @@ topOfPileIdx = 0
 
 -- Function to determine given a game state and an attempted move if it is possible
 
--- check for a draw Pile move
+-- Helper functions to get cards
+
+getPlayerCard :: GSt -> Int -> Int -> Card
+getPlayerCard gameState pileidx cardidx = (((getPHands gameState !! pileidx) ^. cards) !! cardidx) ^. card
+
+getCenterTop :: GSt -> Int -> Card
+getCenterTop gameState pileidx = ((((gameState ^. field . center) !! pileidx) ^. cards) !! topOfPileIdx) ^. card
+
+-- Helper functions to check for move validity
+
+isNextCard :: Card -> Card -> Bool
+isNextCard (Card rf sf) (Card rt st) = (succ rf == rt) && (assignColor sf /= assignColor st)
+
+-- check for different moves and their validity
 
 canMove :: GSt -> Move -> Bool
 
 canMove gameState move
     | isfpiledraw && istpileplayer && hastpileidx && isdrawnotempty = True          -- Corresponds to player drawing a card from draw pile
-    | otherwise                                                     = False
+    | isfpileplayer && istpilecenter && iscardmove && hasfpileidx   = 
+        isNextCard (getPlayerCard gameState fpileidx fcardidx) (getCenterTop gameState tpileidx)
+    | otherwise                                                     = False         -- All moves not explicitly checked are illegal
     where
         isfpiledraw     = move ^. fPileType == DrawP
         isfpileplayer   = move ^. fPileType == PlayerP
