@@ -71,8 +71,9 @@ data DisplayMode = Stacked | Splayed | Sp3           deriving (Eq, Show, Ord)
 -- DrawP    : The pile in the center from which the cards are drawn
 -- CenterP  : One of the 4 piles along the straight lines from the center
 -- CornerP  : One of the 4 piles in the corner headed by a King
+-- NullP    : To handle no selected pile
 
-data PileType    = PlayerP | DrawP | CenterP | CornerP deriving (Eq, Show)
+data PileType    = PlayerP | DrawP | CenterP | CornerP | NullP deriving (Eq, Show)
 
 -- Data type for pile of cards.X
 
@@ -121,5 +122,5 @@ data Move   = Move {  _fPileType  :: PileType, -- Type of pile to take the card 
                       _fPileIdx   :: Maybe Int,-- Index of the pile in an array of piles. Nothing if fPileType is drawP
                       _fCardIdx   :: Maybe Int,-- Index of card in the pile to be placed. Applies only to player hands. Nothing otherwise
                       _tPileType  :: PileType, -- Type of pile to place the card / pile on
-                      _tPileIdx   :: Int       
+                      _tPileIdx   :: Maybe Int       
                       } deriving (Show)

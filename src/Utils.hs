@@ -12,8 +12,10 @@ module Utils
     updateSelCardIdx,
     updateSelPileIdx,
     updateSelPileType,
+    getMoveFromState
   ) where
 
+import Data.Maybe (fromMaybe)
 import Lens.Micro ( (^.), (%~), (&), (.~), (^?!), _head, set )
 import Lens.Micro.TH (makeLenses)
 import qualified System.Random         as R (next, StdGen)
@@ -84,6 +86,19 @@ updateSelPileType False sPileType stState = stState & selpilett .~ sPileType
 updateSelPileIdx :: Bool -> Maybe Int -> GSt -> GSt
 updateSelPileIdx True sPileIdx stState = stState & selpilefi .~ sPileIdx
 updateSelPileIdx False sPileIdx stState = stState & selpileti .~ sPileIdx
+
+-- Function to generate a move object from a given game state
+
+getMoveFromState :: GSt -> Move
+getMoveFromState gameState = Move { _fPileType  = fpilety,
+                                    _fPileIdx   = gameState ^. selpilefi,
+                                    _fCardIdx   = gameState ^. selcdidx,
+                                    _tPileType  = tpilety,
+                                    _tPileIdx   = gameState ^. selpileti
+                                    }
+  where
+    fpilety = fromMaybe NullP (gameState ^. selpileft)
+    tpilety = fromMaybe NullP (gameState ^. selpilett)
 
 -- Initialize game state for a new game
 
