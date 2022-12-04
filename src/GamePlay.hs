@@ -2,6 +2,7 @@
 
 module GamePlay
   ( canMove,
+    makeMove,
     getScore
   ) where
 
@@ -23,13 +24,20 @@ makeLenses ''Move
 
 ------------------------------------------------------------------------------- 
 
-
 -- Constants Initialization
 
 topOfPileIdx :: Int
 topOfPileIdx = 0
 
--- Function to determine given a game state and an attempted move if it is possible
+-- Function to compute score for a player hand
+
+getScore :: [DCard] -> Int
+getScore []             = 0
+getScore (cd:cds)       
+    | cr == RK          = 10 + getScore cds
+    | otherwise         = 1 + getScore cds
+    where
+        Card cr _       = cd ^. card
 
 -- Helper functions to get cards
 
@@ -44,7 +52,6 @@ getCenterBottom gameState pileidx = last (((gameState ^. field . center) !! pile
 
 getCornerTop :: GSt -> Int -> Card
 getCornerTop gameState pileidx = ((((gameState ^. field . corner) !! pileidx) ^. cards) !! topOfPileIdx) ^. card
-
 
 -- Helper functions to check for move validity
 
@@ -82,7 +89,7 @@ checkCen2CorMove gameState cpileidxf cpileidxt
         isfcpileempty   = null (((gameState ^. field . center) !! cpileidxf) ^. cards)
         istcpileempty   = null (((gameState ^. field . corner) !! cpileidxt) ^. cards)
 
-
+-- Function to determine given a game state and an attempted move if it is possible
 -- check for different moves and their validity
 
 canMove :: GSt -> Move -> Bool
@@ -120,12 +127,63 @@ canMove gameState move
         tpileidx        = fromMaybe topOfPileIdx (move ^. tPileIdx)
         isdrawnotempty  = not (null (gameState ^. field . draw . cards))
 
--- Function to compute score for a player hand
+-- Helper functions to execute move
 
-getScore :: [DCard] -> Int
-getScore []             = 0
-getScore (cd:cds)       
-    | cr == RK          = 10 + getScore cds
-    | otherwise         = 1 + getScore cds
+replaceInPileArr :: [Pile] -> Int -> Pile -> [Pile]
+replaceInPileArr iPileArr idx updPile = take idx iPileArr ++ [updPile] ++ drop (idx + 1) iPileArr
+
+makeDrawMove :: GSt -> Int -> GSt
+makeDrawMove iGameState pIdx = GSt { _field     = newfield,
+                                     _seed      = iGameState ^. seed,
+                                     _history   = newhistory,
+                                     _toplay    = toplayidx,
+                                     _selcdidx  = Nothing,
+                                     _selpileft = Nothing,
+                                     _selpilefi = Nothing,
+                                     _selpilett = Nothing,
+                                     _selpileti = Nothing
+                                     }
     where
-        Card cr _       = cd ^. card
+        toplayidx   = iGameState ^. toplay
+        newhistory  = (iGameState ^. field, toplayidx):(iGameState ^. history)
+        newfield    = Field { _draw   = newdraw,
+                              _center = iGameState ^. field . center, 
+                              _corner = iGameState ^. field . corner,
+                              _phands = newphands
+                            }
+        newdraw     = Pile { _cards     = drop 1 (iGameState ^. field . draw . cards),
+                             _display   = Stacked,
+                             _rankBias  = Nothing,
+                             _suitBias  = Nothing,
+                             _pileType  = DrawP
+                           }
+        drawncard   = head (iGameState ^. field . draw . cards)
+        updrawncard = drawncard & facedir .~ FaceUp
+        newphand    = Pile { _cards     = updrawncard : (getPHands iGameState !! pIdx) ^. cards,
+                             _display   = Stacked,
+                             _rankBias  = Nothing,
+                             _suitBias  = Nothing,
+                             _pileType  = DrawP
+                           }
+        newphands   = replaceInPileArr (getPHands iGameState) pIdx newphand
+
+-- Function to modify a game state given a valid move
+
+makeMove :: GSt -> Move -> GSt
+makeMove iGameState move 
+    | isfpiledraw && istpileplayer && hastpileidx && isdrawnotempty     = makeDrawMove iGameState tpileidx
+    | otherwise                                                         = iGameState
+    where
+        isfpiledraw     = move ^. fPileType == DrawP
+        isfpileplayer   = move ^. fPileType == PlayerP
+        isfpilecenter   = move ^. fPileType == CenterP
+        istpileplayer   = move ^. tPileType == PlayerP
+        istpilecenter   = move ^. tPileType == CenterP
+        istpilecorner   = move ^. tPileType == CornerP
+        iscardmove      = isJust (move ^. fCardIdx)
+        hasfpileidx     = isJust (move ^. fPileIdx)
+        hastpileidx     = isJust (move ^. tPileIdx)
+        fcardidx        = fromMaybe topOfPileIdx (move ^. fCardIdx)
+        fpileidx        = fromMaybe topOfPileIdx (move ^. fPileIdx)
+        tpileidx        = fromMaybe topOfPileIdx (move ^. tPileIdx)
+        isdrawnotempty  = not (null (iGameState ^. field . draw . cards))
