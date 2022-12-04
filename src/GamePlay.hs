@@ -240,6 +240,42 @@ makeP2CorMove iGameState pIdx cdIdx cIdx = GSt { _field     = newfield,
                            }
         newcorner   = replaceInArr (iGameState ^. field . corner) cIdx newcpile
 
+makeCen2CenMove :: GSt -> Int -> Int -> GSt
+makeCen2CenMove iGameState cIdxf cIdxt  = GSt { _field     = newfield,
+                                                _seed      = iGameState ^. seed,
+                                                _history   = newhistory,
+                                                _toplay    = toplayidx,
+                                                _selcdidx  = Nothing,
+                                                _selpileft = Nothing,
+                                                _selpilefi = Nothing,
+                                                _selpilett = Nothing,
+                                                _selpileti = Nothing
+                                                }
+    where
+        toplayidx   = iGameState ^. toplay
+        newhistory  = (iGameState ^. field, toplayidx):(iGameState ^. history)
+        newfield    = Field { _draw   = iGameState ^. field . draw,
+                              _center = newcenter, 
+                              _corner = iGameState ^. field . corner,
+                              _phands = iGameState ^. field . phands
+                            }
+        fpile       = ((iGameState ^. field . center) !! cIdxf) ^. cards
+        tpile       = ((iGameState ^. field . center) !! cIdxt) ^. cards
+        newcpilef   = Pile { _cards     = [],
+                             _display   = Stacked,
+                             _rankBias  = Nothing,
+                             _suitBias  = Nothing,
+                             _pileType  = CornerP
+                           }
+        newcpilet   = Pile { _cards     = fpile ++ tpile,
+                             _display   = Stacked,
+                             _rankBias  = Nothing,
+                             _suitBias  = Nothing,
+                             _pileType  = CornerP
+                           }
+        tempcenter  = replaceInArr (iGameState ^. field . center) cIdxf newcpilef
+        newcenter   = replaceInArr tempcenter cIdxt newcpilet
+
 
 -- Function to modify a game state given a valid move
 
@@ -254,6 +290,9 @@ makeMove iGameState move
     -- Corresponds to player placing card on corner pile
     | isfpileplayer && istpilecorner && iscardmove && hasfpileidx && hastpileidx    = 
         makeP2CorMove iGameState fpileidx fcardidx tpileidx
+    -- Corresponds to player placing one center pile on another center pile
+    | isfpilecenter && istpilecenter && hasfpileidx && hastpileidx                  = 
+        makeCen2CenMove iGameState fpileidx tpileidx
     -- All other moves modify nothing
     | otherwise                                                                     = 
         iGameState
