@@ -134,9 +134,24 @@ genPlPile nPlayers deal
 
 -- Generate center and corner piles for initialization
 
+-- Ensure we have 4 corner piles
+
+padCorPiles :: ([Pile], [Pile]) -> ([Pile], [Pile])
+padCorPiles (cenPiles, corPiles)
+  | length corPiles == 4  = (cenPiles, corPiles)
+  | otherwise             = padCorPiles (cenPiles, initCorPile:corPiles)
+  where
+    initCorPile     = Pile { _cards    = [],
+                             _display  = Stacked,
+                             _rankBias = Nothing,
+                             _suitBias = Nothing,
+                             _pileType = CornerP
+                           }
+
+
 genCenCorPiles :: [Card] -> ([Pile], [Pile]) -> ([Pile], [Pile])
 genCenCorPiles deal@((Card RK _):cs) (cenPiles, corPiles)
-  | length cenPiles == 4  = (cenPiles, corPiles)
+  | length cenPiles == 4  = padCorPiles (cenPiles, corPiles)
   | otherwise             = genCenCorPiles cs (cenPiles, initCorPile:corPiles)
   where
     initCorPile     = Pile { _cards    = [ DCard { _card    = ctop,
@@ -151,7 +166,7 @@ genCenCorPiles deal@((Card RK _):cs) (cenPiles, corPiles)
                            }
 
 genCenCorPiles (c:cs) (cenPiles, corPiles)
-  | length cenPiles == 4  = (cenPiles, corPiles)
+  | length cenPiles == 4  = padCorPiles (cenPiles, corPiles)
   | otherwise             = genCenCorPiles cs (initCenPile:cenPiles, corPiles)
   where
     initCenPile     = Pile { _cards    = [ DCard { _card    = c,
@@ -164,7 +179,7 @@ genCenCorPiles (c:cs) (cenPiles, corPiles)
                              _pileType = CenterP
                            }
 
--- Adding to complete patter matching
+-- Adding to complete pattern matching
 
 genCenCorPiles [] (cenPiles, corPiles) = (cenPiles, corPiles)
 
