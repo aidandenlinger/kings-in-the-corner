@@ -129,8 +129,11 @@ canMove gameState move
 
 -- Helper functions to execute move
 
-replaceInPileArr :: [Pile] -> Int -> Pile -> [Pile]
-replaceInPileArr iPileArr idx updPile = take idx iPileArr ++ [updPile] ++ drop (idx + 1) iPileArr
+replaceInArr :: [a] -> Int -> a -> [a]
+replaceInArr iArr idx updEl = take idx iArr ++ [updEl] ++ drop (idx + 1) iArr
+
+removeFromArr :: [a] -> Int -> [a]
+removeFromArr iArr idx = take idx iArr ++ drop (idx + 1) iArr
 
 makeDrawMove :: GSt -> Int -> GSt
 makeDrawMove iGameState pIdx = GSt { _field     = newfield,
@@ -165,14 +168,56 @@ makeDrawMove iGameState pIdx = GSt { _field     = newfield,
                              _suitBias  = Nothing,
                              _pileType  = DrawP
                            }
-        newphands   = replaceInPileArr (getPHands iGameState) pIdx newphand
+        newphands   = replaceInArr (getPHands iGameState) pIdx newphand
+
+makeP2CenMove :: GSt -> Int -> Int -> Int -> GSt
+makeP2CenMove iGameState pIdx cdIdx cIdx = GSt { _field     = newfield,
+                                                 _seed      = iGameState ^. seed,
+                                                 _history   = newhistory,
+                                                 _toplay    = toplayidx,
+                                                 _selcdidx  = Nothing,
+                                                 _selpileft = Nothing,
+                                                 _selpilefi = Nothing,
+                                                 _selpilett = Nothing,
+                                                 _selpileti = Nothing
+                                                 }
+    where
+        toplayidx   = iGameState ^. toplay
+        newhistory  = (iGameState ^. field, toplayidx):(iGameState ^. history)
+        newfield    = Field { _draw   = iGameState ^. field . draw,
+                              _center = newcenter, 
+                              _corner = iGameState ^. field . corner,
+                              _phands = newphands
+                            }
+        newphand    = Pile { _cards     = removeFromArr ((getPHands iGameState !! pIdx) ^. cards) cdIdx,
+                             _display   = Stacked,
+                             _rankBias  = Nothing,
+                             _suitBias  = Nothing,
+                             _pileType  = DrawP
+                           }
+        newphands   = replaceInArr (getPHands iGameState) pIdx newphand
+        selcard     = ((getPHands iGameState !! pIdx) ^. cards) !! cdIdx
+        newcpile    = Pile { _cards     = selcard : (((iGameState ^. field . center) !! cIdx) ^. cards),
+                             _display   = Stacked,
+                             _rankBias  = Nothing,
+                             _suitBias  = Nothing,
+                             _pileType  = CenterP
+                           }
+        newcenter   = replaceInArr (iGameState ^. field . center) cIdx newcpile
 
 -- Function to modify a game state given a valid move
 
 makeMove :: GSt -> Move -> GSt
 makeMove iGameState move 
-    | isfpiledraw && istpileplayer && hastpileidx && isdrawnotempty     = makeDrawMove iGameState tpileidx
-    | otherwise                                                         = iGameState
+    -- Corresponds to player drawing a card from draw pile
+    | isfpiledraw && istpileplayer && hastpileidx && isdrawnotempty                 = 
+        makeDrawMove iGameState tpileidx
+    -- Corresponds to player placing card on center pile
+    | isfpileplayer && istpilecenter && iscardmove && hasfpileidx && hastpileidx    = 
+        makeP2CenMove iGameState fpileidx fcardidx tpileidx
+    -- All other moves modify nothing
+    | otherwise                                                                     = 
+        iGameState
     where
         isfpiledraw     = move ^. fPileType == DrawP
         isfpileplayer   = move ^. fPileType == PlayerP
