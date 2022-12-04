@@ -43,6 +43,9 @@ library:
   - random-shuffle
   - random
   - split
+  - text
+  - vty
+  - ilist
 
 executables:
   kings-in-the-corner-exe:
