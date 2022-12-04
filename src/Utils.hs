@@ -9,8 +9,9 @@ module Utils
     getCurrP,
     getPHands,
     updateToPlay,
-    updateSelPile,
-    updateSelCardIdx
+    updateSelCardIdx,
+    updateSelPileIdx,
+    updateSelPileType,
   ) where
 
 import Lens.Micro ( (^.), (%~), (&), (.~), (^?!), _head, set )
@@ -76,9 +77,13 @@ updateSelCardIdx sCardIdx stState = stState & selcdidx .~ sCardIdx
 -- True corresponds to updating the from pile
 -- False corresponds to updating the to pile
 
-updateSelPile :: Bool -> Maybe Pile -> GSt -> GSt
-updateSelPile True sPile stState = stState & selpilef .~ sPile
-updateSelPile False sPile stState = stState & selpilet .~ sPile
+updateSelPileType :: Bool -> Maybe PileType -> GSt -> GSt
+updateSelPileType True sPileType stState = stState & selpileft .~ sPileType
+updateSelPileType False sPileType stState = stState & selpilett .~ sPileType
+
+updateSelPileIdx :: Bool -> Maybe Int -> GSt -> GSt
+updateSelPileIdx True sPileIdx stState = stState & selpilefi .~ sPileIdx
+updateSelPileIdx False sPileIdx stState = stState & selpileti .~ sPileIdx
 
 -- Initialize game state for a new game
 
@@ -156,8 +161,10 @@ initGSt nPlayers seedval = GSt { _field     = fieldval,
                                  _history   = [],
                                  _toplay    = 0,
                                  _selcdidx  = Nothing,
-                                 _selpilef  = Nothing,
-                                 _selpilet  = Nothing
+                                 _selpileft = Nothing,
+                                 _selpilefi = Nothing,
+                                 _selpilett = Nothing,
+                                 _selpileti = Nothing
                                }
   where
     deal      = R.shuffle' initialDeal 52 seedval -- Shuffle the initial deal

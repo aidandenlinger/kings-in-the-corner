@@ -100,9 +100,11 @@ data GSt = GSt { _field     :: Field            -- Current state of decks
                , _seed      :: R.StdGen         -- A random seed to be passed thru
                , _history   :: [(Field, Int)]   -- List of previous fields and corresponding player ids
                , _toplay    :: Int              -- Player id of the one with next move
+               , _selpileft :: Maybe PileType   -- Pile type of the from pile if selected
+               , _selpilefi :: Maybe Int        -- Pile idx of the from pile if selected
                , _selcdidx  :: Maybe Int        -- Card idx from the from pile if selected
-               , _selpilef  :: Maybe Pile       -- A pile if selected in the graphics to be the from pile
-               , _selpilet  :: Maybe Pile       -- A pile if selected in the graphics to be the to pile
+               , _selpilett :: Maybe PileType   -- Pile type of the to pile if selected
+               , _selpileti :: Maybe Int        -- Pile idx of the to pile if selected
                } deriving (Show)
 
 -- DISPLAY TYPES ---------------------------------------------------------------
@@ -115,10 +117,9 @@ data Axis   = NS | EW deriving (Eq, Show) -- data type for pile splay orientatio
 
 -- Data type for capturing a suggested move
 
-data Move   = Move {  _pileMove   :: Bool,     -- True if we are trying to place a pile on another pile, False if card on pile
-                      _fPileType  :: PileType, -- Type of pile to take the card / pile from
-                      _fPileIdx   :: Int,      -- Index of the pile in an array of piles. Not applicable if sPileType is drawP
-                      _fCardIdx   :: Int,      -- Index of card in the pile to be placed. Applies only to player hands  
+data Move   = Move {  _fPileType  :: PileType, -- Type of pile to take the card / pile from
+                      _fPileIdx   :: Maybe Int,-- Index of the pile in an array of piles. Nothing if fPileType is drawP
+                      _fCardIdx   :: Maybe Int,-- Index of card in the pile to be placed. Applies only to player hands. Nothing otherwise
                       _tPileType  :: PileType, -- Type of pile to place the card / pile on
-                      _tPileIdx   :: Int       -- Index of pile in an array of piles..
+                      _tPileIdx   :: Int       
                       } deriving (Show)
