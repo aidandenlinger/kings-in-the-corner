@@ -75,8 +75,9 @@ checkCornerMove gameState cpileidx pcard@(Card pr _)
 
 checkCen2CenMove :: GSt -> Int -> Int -> Bool
 checkCen2CenMove gameState cpileidxf cpileidxt
-    | isfcpileempty || istcpileempty = False
-    | otherwise                      = isNextCard (getCenterBottom gameState cpileidxf) (getCenterTop gameState cpileidxt)
+    | isfcpileempty || istcpileempty    = False
+    | cpileidxf == cpileidxt            = False
+    | otherwise                         = isNextCard (getCenterBottom gameState cpileidxf) (getCenterTop gameState cpileidxt)
     where
         isfcpileempty   = null (((gameState ^. field . center) !! cpileidxf) ^. cards)
         istcpileempty   = null (((gameState ^. field . center) !! cpileidxt) ^. cards)
@@ -135,6 +136,8 @@ replaceInArr iArr idx updEl = take idx iArr ++ [updEl] ++ drop (idx + 1) iArr
 removeFromArr :: [a] -> Int -> [a]
 removeFromArr iArr idx = take idx iArr ++ drop (idx + 1) iArr
 
+-- Update game state for a draw move
+
 makeDrawMove :: GSt -> Int -> GSt
 makeDrawMove iGameState pIdx = GSt { _field     = newfield,
                                      _seed      = iGameState ^. seed,
@@ -166,9 +169,11 @@ makeDrawMove iGameState pIdx = GSt { _field     = newfield,
                              _display   = Stacked,
                              _rankBias  = Nothing,
                              _suitBias  = Nothing,
-                             _pileType  = DrawP
+                             _pileType  = PlayerP
                            }
         newphands   = replaceInArr (getPHands iGameState) pIdx newphand
+
+-- Update game state for a card from player hand to center pile
 
 makeP2CenMove :: GSt -> Int -> Int -> Int -> GSt
 makeP2CenMove iGameState pIdx cdIdx cIdx = GSt { _field     = newfield,
@@ -193,7 +198,7 @@ makeP2CenMove iGameState pIdx cdIdx cIdx = GSt { _field     = newfield,
                              _display   = Stacked,
                              _rankBias  = Nothing,
                              _suitBias  = Nothing,
-                             _pileType  = DrawP
+                             _pileType  = PlayerP
                            }
         newphands   = replaceInArr (getPHands iGameState) pIdx newphand
         selcard     = ((getPHands iGameState !! pIdx) ^. cards) !! cdIdx
@@ -204,6 +209,8 @@ makeP2CenMove iGameState pIdx cdIdx cIdx = GSt { _field     = newfield,
                              _pileType  = CenterP
                            }
         newcenter   = replaceInArr (iGameState ^. field . center) cIdx newcpile
+
+-- Update game state for a card from player hand to corner pile
 
 makeP2CorMove :: GSt -> Int -> Int -> Int -> GSt
 makeP2CorMove iGameState pIdx cdIdx cIdx = GSt { _field     = newfield,
@@ -228,7 +235,7 @@ makeP2CorMove iGameState pIdx cdIdx cIdx = GSt { _field     = newfield,
                              _display   = Stacked,
                              _rankBias  = Nothing,
                              _suitBias  = Nothing,
-                             _pileType  = DrawP
+                             _pileType  = PlayerP
                            }
         newphands   = replaceInArr (getPHands iGameState) pIdx newphand
         selcard     = ((getPHands iGameState !! pIdx) ^. cards) !! cdIdx
@@ -239,6 +246,8 @@ makeP2CorMove iGameState pIdx cdIdx cIdx = GSt { _field     = newfield,
                              _pileType  = CornerP
                            }
         newcorner   = replaceInArr (iGameState ^. field . corner) cIdx newcpile
+
+-- Update game state for a center pile to another center pile
 
 makeCen2CenMove :: GSt -> Int -> Int -> GSt
 makeCen2CenMove iGameState cIdxf cIdxt  = GSt { _field     = newfield,
@@ -265,7 +274,45 @@ makeCen2CenMove iGameState cIdxf cIdxt  = GSt { _field     = newfield,
                              _display   = Stacked,
                              _rankBias  = Nothing,
                              _suitBias  = Nothing,
-                             _pileType  = CornerP
+                             _pileType  = CenterP
+                           }
+        newcpilet   = Pile { _cards     = fpile ++ tpile,
+                             _display   = Stacked,
+                             _rankBias  = Nothing,
+                             _suitBias  = Nothing,
+                             _pileType  = CenterP
+                           }
+        tempcenter  = replaceInArr (iGameState ^. field . center) cIdxf newcpilef
+        newcenter   = replaceInArr tempcenter cIdxt newcpilet
+
+-- Update game state for a center pile to a corner pile
+
+makeCen2CorMove :: GSt -> Int -> Int -> GSt
+makeCen2CorMove iGameState cIdxf cIdxt  = GSt { _field     = newfield,
+                                                _seed      = iGameState ^. seed,
+                                                _history   = newhistory,
+                                                _toplay    = toplayidx,
+                                                _selcdidx  = Nothing,
+                                                _selpileft = Nothing,
+                                                _selpilefi = Nothing,
+                                                _selpilett = Nothing,
+                                                _selpileti = Nothing
+                                                }
+    where
+        toplayidx   = iGameState ^. toplay
+        newhistory  = (iGameState ^. field, toplayidx):(iGameState ^. history)
+        newfield    = Field { _draw   = iGameState ^. field . draw,
+                              _center = newcenter, 
+                              _corner = newcorner,
+                              _phands = iGameState ^. field . phands
+                            }
+        fpile       = ((iGameState ^. field . center) !! cIdxf) ^. cards
+        tpile       = ((iGameState ^. field . corner) !! cIdxt) ^. cards
+        newcpilef   = Pile { _cards     = [],
+                             _display   = Stacked,
+                             _rankBias  = Nothing,
+                             _suitBias  = Nothing,
+                             _pileType  = CenterP
                            }
         newcpilet   = Pile { _cards     = fpile ++ tpile,
                              _display   = Stacked,
@@ -273,8 +320,8 @@ makeCen2CenMove iGameState cIdxf cIdxt  = GSt { _field     = newfield,
                              _suitBias  = Nothing,
                              _pileType  = CornerP
                            }
-        tempcenter  = replaceInArr (iGameState ^. field . center) cIdxf newcpilef
-        newcenter   = replaceInArr tempcenter cIdxt newcpilet
+        newcenter   = replaceInArr (iGameState ^. field . center) cIdxf newcpilef
+        newcorner   = replaceInArr (iGameState ^. field . corner) cIdxt newcpilet
 
 
 -- Function to modify a game state given a valid move
@@ -293,6 +340,9 @@ makeMove iGameState move
     -- Corresponds to player placing one center pile on another center pile
     | isfpilecenter && istpilecenter && hasfpileidx && hastpileidx                  = 
         makeCen2CenMove iGameState fpileidx tpileidx
+    -- Corresponds to player placing one center pile on a corner pile
+    | isfpilecenter && istpilecorner && hasfpileidx && hastpileidx                  = 
+        makeCen2CorMove iGameState fpileidx tpileidx
     -- All other moves modify nothing
     | otherwise                                                                     = 
         iGameState
