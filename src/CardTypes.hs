@@ -11,6 +11,7 @@ module CardTypes
   , PileType(..)
   , Rank(..) 
   , Suit(..)
+  , Move(..)
   ) where
 
 import qualified System.Random as R (StdGen)
@@ -95,12 +96,13 @@ data Field = Field { _draw    :: Pile
 
 -- Gamestate data type recording game history and current play situation
 
-data GSt = GSt { _field   :: Field            -- Current state of decks
-               , _seed    :: R.StdGen         -- A random seed to be passed thru
-               , _history :: [(Field, Int)]   -- List of previous fields and corresponding player ids
-               , _toplay  :: Int              -- Player id of the one with next move
-               , _selcd   :: Maybe DCard      -- A card if selected in the graphics
-               , _selpile :: Maybe Pile       -- A pile if selected in the graphics
+data GSt = GSt { _field     :: Field            -- Current state of decks
+               , _seed      :: R.StdGen         -- A random seed to be passed thru
+               , _history   :: [(Field, Int)]   -- List of previous fields and corresponding player ids
+               , _toplay    :: Int              -- Player id of the one with next move
+               , _selcdidx  :: Maybe Int        -- Card idx from the from pile if selected
+               , _selpilef  :: Maybe Pile       -- A pile if selected in the graphics to be the from pile
+               , _selpilet  :: Maybe Pile       -- A pile if selected in the graphics to be the to pile
                } deriving (Show)
 
 -- DISPLAY TYPES ---------------------------------------------------------------
@@ -111,8 +113,12 @@ data Color  = Red | Black                       deriving (Eq, Show, Ord)
 
 data Axis   = NS | EW deriving (Eq, Show) -- data type for pile splay orientation
 
--- data Action = New | Undo deriving (Eq, Show, Ord) -- data type for button action
+-- Data type for capturing a suggested move
 
--- data Ext = StockX | WasteX | TableX | FoundX -- named extents for click regions
---          | IdX Int | DCX DCard | ActionX Action
---   deriving (Eq, Show, Ord)
+data Move   = Move {  _pileMove   :: Bool,     -- True if we are trying to place a pile on another pile, False if card on pile
+                      _fPileType  :: PileType, -- Type of pile to take the card / pile from
+                      _fPileIdx   :: Int,      -- Index of the pile in an array of piles. Not applicable if sPileType is drawP
+                      _fCardIdx   :: Int,      -- Index of card in the pile to be placed. Applies only to player hands  
+                      _tPileType  :: PileType, -- Type of pile to place the card / pile on
+                      _tPileIdx   :: Int       -- Index of pile in an array of piles..
+                      } deriving (Show)
