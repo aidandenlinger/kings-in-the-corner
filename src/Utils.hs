@@ -8,6 +8,9 @@ module Utils
     hasWon,
     getCurrP,
     getPHands,
+    getCurrPCards,
+    incLook,
+    decLook,
     updateToPlay,
     updateSelCardIdx,
     updateSelPileIdx,
@@ -64,6 +67,24 @@ getCurrP gameState = gameState ^. toplay
 
 getPHands :: GSt -> [Pile]
 getPHands gameState = gameState ^. field . phands
+
+-- Get player cards for current player
+getCurrPCards :: GSt -> [Card]
+getCurrPCards gameState = map (^. card) ((getPHands gameState !! getCurrP gameState) ^. cards)
+
+-- Inc look
+updateLook :: (Int -> Int) -> GSt -> GSt
+updateLook func gameState = case gameState ^. looking of
+  PlayerLook idx -> gameState & looking .~ newLook
+    where
+      newLook = PlayerLook (func idx `mod` length (getCurrPCards gameState))
+  PileLook _piletype _pileidx -> undefined
+
+incLook :: GSt -> GSt
+incLook = updateLook (+ 1)
+
+decLook :: GSt -> GSt
+decLook = updateLook (\x -> x - 1)
 
 -- Update the index of the player currently to play
 
@@ -190,6 +211,7 @@ initGSt nPlayers seedval = GSt { _field     = fieldval,
                                  _seed      = seedval,
                                  _history   = [],
                                  _toplay    = 0,
+                                 _looking   = PlayerLook 0,
                                  _selcdidx  = Nothing,
                                  _selpileft = Nothing,
                                  _selpilefi = Nothing,

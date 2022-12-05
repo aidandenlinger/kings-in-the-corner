@@ -6,6 +6,7 @@ module CardTypes
   , DisplayMode(..)
   , FaceDir(..)
   , Field(..)
+  , Look(..)
   , GSt(..)
   , Pile(..)
   , PileType(..)
@@ -98,12 +99,15 @@ data Field = Field { _drawPile    :: Pile
                    , _phands  :: [Pile]
                    } deriving (Eq, Show)
 
+data Look = PlayerLook Int | PileLook PileType Int deriving (Eq, Show)
+
 -- Gamestate data type recording game history and current play situation
 
 data GSt = GSt { _field     :: Field            -- Current state of decks
                , _seed      :: R.StdGen         -- A random seed to be passed thru
                , _history   :: [(Field, Int)]   -- List of previous fields and corresponding player ids
                , _toplay    :: Int              -- Player id of the one with next move
+               , _looking   :: Look             -- Where the player is currently looking
                , _selpileft :: Maybe PileType   -- Pile type of the from pile if selected
                , _selpilefi :: Maybe Int        -- Pile idx of the from pile if selected
                , _selcdidx  :: Maybe Int        -- Card idx from the from pile if selected
