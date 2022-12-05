@@ -71,6 +71,7 @@ checkCenterMove gameState cpileidx pcard@(Card pr _)
 checkCornerMove :: GSt -> Int -> Card -> Bool
 checkCornerMove gameState cpileidx pcard@(Card pr _)
     | iscpileempty && (pr == RK)        = True
+    | iscpileempty && (pr /= RK)        = False
     | otherwise                         = isNextCard pcard (getCornerTop gameState cpileidx)
     where
         iscpileempty    = null (((gameState ^. field . cornerPiles) !! cpileidx) ^. cards)
