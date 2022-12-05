@@ -6,6 +6,7 @@ module CardTypes
   , DisplayMode(..)
   , FaceDir(..)
   , Field(..)
+  , Look(..)
   , GSt(..)
   , Pile(..)
   , PileType(..)
@@ -17,6 +18,8 @@ module CardTypes
 import qualified System.Random as R (StdGen)
 
 -- Base code borrowed from https://github.com/ambuc/solitaire
+
+
 
 -- CARD TYPES ------------------------------------------------------------------
 -- Define basic data types to handle cards
@@ -92,11 +95,13 @@ data Pile = Pile { _cards    :: [DCard]     --   List of cards in the pile in or
 
 -- Data type for the complete field
 
-data Field = Field { _draw    :: Pile
-                   , _center  :: [Pile]
-                   , _corner  :: [Pile]
+data Field = Field { _drawPile    :: Pile
+                   , _centerPiles  :: [Pile]
+                   , _cornerPiles  :: [Pile]
                    , _phands  :: [Pile]
                    } deriving (Eq, Show)
+
+data Look = PlayerLook Int | PileLook Int deriving (Eq, Show)
 
 -- Gamestate data type recording game history and current play situation
 
@@ -104,6 +109,7 @@ data GSt = GSt { _field     :: Field            -- Current state of decks
                , _seed      :: R.StdGen         -- A random seed to be passed thru
                , _history   :: [(Field, Int)]   -- List of previous fields and corresponding player ids
                , _toplay    :: Int              -- Player id of the one with next move
+               , _looking   :: Look             -- Where the player is currently looking
                , _selpileft :: Maybe PileType   -- Pile type of the from pile if selected
                , _selpilefi :: Maybe Int        -- Pile idx of the from pile if selected
                , _selcdidx  :: Maybe Int        -- Card idx from the from pile if selected

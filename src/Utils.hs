@@ -8,6 +8,14 @@ module Utils
     hasWon,
     getCurrP,
     getPHands,
+    getCurrPCards,
+    incLook,
+    decLook,
+    setLook,
+    makeSelection,
+    makeSecondSelection,
+    haveSelection,
+    getPiles,
     updateToPlay,
     updateSelCardIdx,
     updateSelPileIdx,
@@ -15,13 +23,14 @@ module Utils
     getMoveFromState
   ) where
 
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, isJust)
 import Lens.Micro ( (^.), (%~), (&), (.~), (^?!), _head, set )
 import Lens.Micro.TH (makeLenses)
 import qualified System.Random         as R (next, StdGen)
 import qualified System.Random.Shuffle as R (shuffle')
 
 import CardTypes
+import Data.List (transpose)
 
 -------------------------------------------------------------------------------
 -- Convert data types from CardTypes to Lenses for easy access
@@ -64,6 +73,78 @@ getCurrP gameState = gameState ^. toplay
 
 getPHands :: GSt -> [Pile]
 getPHands gameState = gameState ^. field . phands
+
+pileToCards :: Pile -> [Card]
+pileToCards p = map (^. card) (p ^. cards)
+
+-- Get player cards for current player
+getCurrPCards :: GSt -> [Card]
+getCurrPCards gameState = pileToCards (getPHands gameState !! getCurrP gameState)
+
+-- Look functions
+updateLook :: (Int -> Int) -> GSt -> GSt
+updateLook func gameState = case gameState ^. looking of
+  PlayerLook idx -> flip setLook gameState $
+                    PlayerLook (func idx `mod` length (getCurrPCards gameState))
+  PileLook idx -> flip setLook gameState $
+                  PileLook (func idx `mod` length (getPiles gameState))
+
+setLook :: Look -> GSt -> GSt
+setLook l gs = gs & looking .~ l
+
+incLook :: GSt -> GSt
+incLook = updateLook (+ 1)
+
+decLook :: GSt -> GSt
+decLook = updateLook (\x -> x - 1)
+
+makeSelection :: GSt -> GSt
+makeSelection gs = case gs ^. selpileft of
+  Nothing -> case gs ^. looking of
+    -- move Look to GameState selection, start looking at piles
+    PlayerLook idx -> setLook (PileLook 0) $
+                      updateSelPileIdx True (Just $ getCurrP gs) $
+                      updateSelCardIdx (Just idx) $
+                      updateSelPileType True (Just PlayerP) gs
+    PileLook _pileidx -> undefined
+  Just _ -> gs -- TODO: allow undoing selection
+
+-- doesn't check for existing selection, this will always overwrite
+makeSecondSelection :: GSt -> GSt
+makeSecondSelection gs = case gs ^. looking of
+  PlayerLook _ -> error "impossible, can't select from deck for second selection"
+  PileLook pileidx -> updateSelPileIdx False (Just $ calcGSPileIdx pileidx) $
+                      updateSelPileType False (Just $ calcPileType pileidx) gs
+    where
+      calcPileType 0 = CornerP
+      calcPileType 2 = CornerP
+      calcPileType 6 = CornerP
+      calcPileType 8 = CornerP
+      calcPileType 4 = DrawP -- error case, can't select draw pile
+      calcPileType _ = CenterP
+
+      calcGSPileIdx 0 = 0
+      calcGSPileIdx 2 = 1
+      calcGSPileIdx 6 = 2
+      calcGSPileIdx 8 = 3
+      calcGSPileIdx 1 = 0
+      calcGSPileIdx 3 = 1
+      calcGSPileIdx 5 = 2
+      calcGSPileIdx 7 = 3
+      calcGSPileIdx 4 = 0 -- error case, can't select draw pile
+
+haveSelection :: GSt -> Bool
+haveSelection gs = isJust (gs ^. selpileft)
+
+-- Gets the center and corner piles for graphics. DOES NOT GET DRAW PILE (since we don't want
+-- to display what the draw card is!)
+-- <https://stackoverflow.com/a/22702925>
+getPiles :: GSt -> [[Card]]
+getPiles gs = map pileToCards [topleft, top, topright, left, draw, right, bottomleft, bottom, bottomright]
+  where
+    draw = gs ^. field . drawPile
+    [topleft, topright, bottomleft, bottomright] = gs ^. field . cornerPiles
+    [top, left, right, bottom] = gs ^. field . centerPiles
 
 -- Update the index of the player currently to play
 
@@ -190,6 +271,7 @@ initGSt nPlayers seedval = GSt { _field     = fieldval,
                                  _seed      = seedval,
                                  _history   = [],
                                  _toplay    = 0,
+                                 _looking   = PlayerLook 0,
                                  _selcdidx  = Nothing,
                                  _selpileft = Nothing,
                                  _selpilefi = Nothing,
@@ -198,9 +280,9 @@ initGSt nPlayers seedval = GSt { _field     = fieldval,
                                }
   where
     deal      = R.shuffle' initialDeal 52 seedval -- Shuffle the initial deal
-    fieldval  = Field { _draw = drawval,
-                        _center = centerval, 
-                        _corner = cornerval,
+    fieldval  = Field { _drawPile = drawval,
+                        _centerPiles = centerval, 
+                        _cornerPiles = cornerval,
                         _phands = phandsval
                       }
     phandsval = genPlPile nPlayers deal
