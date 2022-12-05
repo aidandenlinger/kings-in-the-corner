@@ -33,13 +33,13 @@ pileHorizPadding = 4
 pileVertPadding :: Int
 pileVertPadding = 0
 
-type GameState = (Int, Int, Int, (Int, Int))
+type GameState = (Int, Int, Int, (Int, Int), (Int, Int))
 
 --- MAIN DRAW FUNCTION
 
 -- Given the GameState, return the widget to draw
 draw :: GameState -> Widget ()
-draw (sel, place, _, _) = vBox [topPiles, playerHand]
+draw (sel, place, _, _, _) = vBox [topPiles, playerHand]
   where
     -- TODO: Don't use hardcoded values, get piles from gamestate
     topPiles = createTopPiles place [topPile, rightPile, bottomPile, leftPile]
@@ -169,24 +169,30 @@ bottomPile = [Card RK Diamond, Card RJ Diamond]
 
 handleEvent :: GameState -> BrickEvent n e -> EventM n (Next GameState)
 -- Left and Right move between player cards
-handleEvent (sel, place, numCards, r) (VtyEvent (EvKey KLeft _)) =
-  continue ((sel - 1) `mod` numCards, place, numCards, r)
-handleEvent (sel, place, numCards, r) (VtyEvent (EvKey KRight _)) =
-  continue ((sel + 1) `mod` numCards, place, numCards, r)
+handleEvent (sel, place, numCards, r, h) (VtyEvent (EvKey KLeft _)) =
+  continue ((sel - 1) `mod` numCards, place, numCards, r, h)
+handleEvent (sel, place, numCards, r, h) (VtyEvent (EvKey KRight _)) =
+  continue ((sel + 1) `mod` numCards, place, numCards, r, h)
 -- Up and Down move between decks
-handleEvent (sel, place, numCards, r) (VtyEvent (EvKey KUp _)) =
-  continue (sel, (place + 1) `mod` 4, numCards, r)
-handleEvent (sel, place, numCards, r) (VtyEvent (EvKey KDown _)) =
-  continue (sel, (place - 1) `mod` 4, numCards, r)
-handleEvent (sel, place, numCards, r) (VtyEvent (EvKey (KChar ' ') _)) =
-  continue (sel, place, numCards, (50, 50))
+handleEvent (sel, place, numCards, r, h) (VtyEvent (EvKey KUp _)) =
+  continue (sel, (place + 1) `mod` 4, numCards, r, h)
+handleEvent (sel, place, numCards, r, h) (VtyEvent (EvKey KDown _)) =
+  continue (sel, (place - 1) `mod` 4, numCards, r, h)
+handleEvent (sel, place, numCards, r, h) (VtyEvent (EvKey (KChar ' ') _)) =
+  continue (sel, place, numCards, (50, 50), h)
+handleEvent (sel, place, numCards, r, h) (VtyEvent (EvKey (KChar 'q') _)) =
+  toggleHelp (sel, place, numCards, r, h)
 -- Esc quits game
 handleEvent s (VtyEvent (EvKey KEsc [])) = halt s
 -- Everything else does not change state
 handleEvent s _ = continue s
 
-ui :: GameState -> Widget ()
-ui (sel, place, _, (r1, r2)) =
+toggleHelp :: GameState -> EventM n (Next GameState)
+toggleHelp (sel, place, numCards, r, (50, 50)) = continue (sel, place, numCards, r, (0, 0))
+toggleHelp (sel, place, numCards, r, (0, 0)) = continue (sel, place, numCards, r, (50, 50))
+
+startScreen :: GameState -> Widget ()
+startScreen (sel, place, _, (r1, r2), h) =
     translateBy (Location(r1, r2)) $
     joinBorders $
     withBorderStyle BS.unicode $
@@ -195,6 +201,14 @@ ui (sel, place, _, (r1, r2)) =
     vBorder <+> 
     center (translateBy (Location(9, 0)) (cardWidget "♥️") <=> ((padLeftRight 4 (cardWidget "K♠")) <+> cardWidget "K♣︎") <=> (translateBy (Location(9, 0)) (cardWidget "♦️")) <=>  (translateBy (Location(3,0))  (padTopBottom 5 (str "Kings in the Corner")) <=>  (str "Press Spacebar to begin playing")) )  )
 
+keyHelp :: GameState -> Widget ()
+keyHelp (sel, place, _, (r1, r2), (h1, h2)) =
+    translateBy (Location(h1, h2)) $
+    withBorderStyle BS.unicode . border $
+    setAvailableSize (20, 45) $
+    strWrap "Press UP arrow to select piles\n\nPress L/R arrows to select\n\nPress enter to make a selection\n\nPress 'q' to close help"
+
+
 --- GAME START
 
 gameStart :: IO ()
@@ -202,7 +216,7 @@ gameStart = do
   let app =
         App
           { -- given a state, return list of widgets to draw.
-            appDraw = \s -> [ui s, draw s],
+            appDraw = \s -> [startScreen s, keyHelp s, draw s],
             -- given state and an event, describe how to change state. the app
             -- is then redrawn
             appHandleEvent = handleEvent,
@@ -217,6 +231,6 @@ gameStart = do
   -- use defaultMain to start our app
   -- ignore the final returned state for now, because this app doesn't store
   -- anything
-  _ <- defaultMain app (0, 0, length playerCards, (0, 0))
+  _ <- defaultMain app (0, 0, length playerCards, (0, 0), (0, 0))
   -- exit once done, don't check anything
   exitSuccess
