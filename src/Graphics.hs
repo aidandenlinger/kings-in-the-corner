@@ -1,7 +1,7 @@
 module Graphics (gameStart) where
 
 import Brick
-import Brick.Widgets.Border (border)
+import Brick.Widgets.Border (border, borderWithLabel, vBorder)
 import Brick.Widgets.Border.Style as BS
 import Brick.Widgets.Center
 import CardTypes
@@ -33,13 +33,13 @@ pileHorizPadding = 4
 pileVertPadding :: Int
 pileVertPadding = 0
 
-type GameState = (Int, Int, Int)
+type GameState = (Int, Int, Int, (Int, Int))
 
 --- MAIN DRAW FUNCTION
 
 -- Given the GameState, return the widget to draw
 draw :: GameState -> Widget ()
-draw (sel, place, _) = vBox [topPiles, playerHand]
+draw (sel, place, _, _) = vBox [topPiles, playerHand]
   where
     -- TODO: Don't use hardcoded values, get piles from gamestate
     topPiles = createTopPiles place [topPile, rightPile, bottomPile, leftPile]
@@ -64,7 +64,7 @@ createTopPiles place piles
           )
           -- TODO: fill corner and middle decks with real values
           [ [ (cardWidgetItalic "top\nleft"), topWidget, (cardWidgetItalic "top\nrigh\nt")],
-            [leftWidget, cardWidget "deck", rightWidget],
+            [leftWidget, translateBy (Location(0,1)) (cardWidget "deck"), rightWidget],
             [translateBy (Location(0,2)) (cardWidgetItalic "bot\nleft"), bottomWidget, translateBy (Location(0,2)) (cardWidgetItalic "bot\nrigh\nt")]
           ]
   where
@@ -134,7 +134,7 @@ italicStyle = withBorderStyle custom . border
                   , BS.bsCornerBR = toEnum 0x256F
                   , BS.bsCornerBL = toEnum 0x2570
                   , BS.bsHorizontal = '─'
-                  , BS.bsVertical = '#'
+                  , BS.bsVertical = '•'
                    }
 
 -- attributes that widgets can use
@@ -169,19 +169,31 @@ bottomPile = [Card RK Diamond, Card RJ Diamond]
 
 handleEvent :: GameState -> BrickEvent n e -> EventM n (Next GameState)
 -- Left and Right move between player cards
-handleEvent (sel, place, numCards) (VtyEvent (EvKey KLeft _)) =
-  continue ((sel - 1) `mod` numCards, place, numCards)
-handleEvent (sel, place, numCards) (VtyEvent (EvKey KRight _)) =
-  continue ((sel + 1) `mod` numCards, place, numCards)
+handleEvent (sel, place, numCards, r) (VtyEvent (EvKey KLeft _)) =
+  continue ((sel - 1) `mod` numCards, place, numCards, r)
+handleEvent (sel, place, numCards, r) (VtyEvent (EvKey KRight _)) =
+  continue ((sel + 1) `mod` numCards, place, numCards, r)
 -- Up and Down move between decks
-handleEvent (sel, place, numCards) (VtyEvent (EvKey KUp _)) =
-  continue (sel, (place + 1) `mod` 4, numCards)
-handleEvent (sel, place, numCards) (VtyEvent (EvKey KDown _)) =
-  continue (sel, (place - 1) `mod` 4, numCards)
+handleEvent (sel, place, numCards, r) (VtyEvent (EvKey KUp _)) =
+  continue (sel, (place + 1) `mod` 4, numCards, r)
+handleEvent (sel, place, numCards, r) (VtyEvent (EvKey KDown _)) =
+  continue (sel, (place - 1) `mod` 4, numCards, r)
+handleEvent (sel, place, numCards, r) (VtyEvent (EvKey KEnter _)) =
+  continue (sel, place, numCards, (50, 50))
 -- Esc quits game
 handleEvent s (VtyEvent (EvKey KEsc [])) = halt s
 -- Everything else does not change state
 handleEvent s _ = continue s
+
+ui :: GameState -> Widget ()
+ui (sel, place, _, (r1, r2)) =
+    translateBy (Location(r1, r2)) $
+    joinBorders $
+    withBorderStyle BS.unicode $
+    borderWithLabel (str "Kings in the Corner") $
+    (center ( center (str "How to play Kings in the Corner:\n") <=> (strWrap "Rank of Cards: K-Q-J-10-9-8-7-6-5-4-3-2-A (ace low)\n\nObject of the Game: Players try to get rid of their cards by playing them in a solitaire-like layout of eight piles, built of alternate red and black cards in descending order.\n\nThe Deal: Deal seven cards to each player. Place the remaining cards in the middle of the table as a stockpile. Then turn the four top cards over, placing one on each of the four sides of the deck — to the north, south, east, and west. These will be the foundation piles. The cards on the table should make the shape of a cross\n\nThe Play: The player to the left of the dealer begins by drawing one card from the center stockpile. The player may make as many valid plays as are possible during their turn to get rid of as many cards as possible from their hand. Once there are no more valid moves, it’s the next player’s turn. Each player begins their turn by drawing a card from the center stockpile and making as many valid moves as they can.\n\nValid Moves: Play a card (or sequence of cards) on a foundation pile in the cross. To play cards on a foundation pile, the card played must be immediately below the foundation card in rank and of the opposite color (red or black). For example, if a 9♥ is on the foundation pile, then the next card face played must be 8♣ or 8♠. A sequence of cards may also be played, but all the cards in the sequence must obey the lower rank and opposite color rules. Aces are always the lowest cards.\n\nPlay a “King in the corner”: Kings are the only cards that can be played in the corner spaces created by the cross. Once a King is played, players may then lay off cards on that pile like any other foundation pile. Move an entire foundation pile onto another pile, if the bottom card of that recipient pile and the top card of the moving pile creates a valid sequence. This is often possible when the cards are first dealt. Play any card or sequence of cards on a vacated foundation pile.\n\nHow to Keep Score: The first player to lay off all of their cards wins.\n\n")) <+> 
+    vBorder <+> 
+    center (translateBy (Location(9, 0)) (cardWidget "♥️") <=> ((padLeftRight 4 (cardWidget "K♠")) <+> cardWidget "K♣︎") <=> (translateBy (Location(9, 0)) (cardWidget "♦️")) <=>  (translateBy (Location(3,0))  (padTopBottom 5 (str "Kings in the Corner")) <=>  (str "Press Enter to begin playing")) )  )
 
 --- GAME START
 
@@ -190,7 +202,7 @@ gameStart = do
   let app =
         App
           { -- given a state, return list of widgets to draw.
-            appDraw = \s -> [draw s],
+            appDraw = \s -> [ui s, draw s],
             -- given state and an event, describe how to change state. the app
             -- is then redrawn
             appHandleEvent = handleEvent,
@@ -205,6 +217,6 @@ gameStart = do
   -- use defaultMain to start our app
   -- ignore the final returned state for now, because this app doesn't store
   -- anything
-  _ <- defaultMain app (0, 0, length playerCards)
+  _ <- defaultMain app (0, 0, length playerCards, (0, 0))
   -- exit once done, don't check anything
   exitSuccess

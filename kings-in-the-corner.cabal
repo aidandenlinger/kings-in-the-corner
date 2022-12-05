@@ -29,6 +29,7 @@ library
       GamePlay
       Graphics
       Lib
+      Lib1
       Utils
   other-modules:
       Paths_kings_in_the_corner
