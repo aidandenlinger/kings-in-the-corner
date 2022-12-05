@@ -52,11 +52,11 @@ type GameState = GSt
 
 -- Given the GameState, return the widget to draw
 draw :: GameState -> Widget ()
-draw gs = vBox [topPiles, playerHand]
+draw gs = vBox [topPiles, playerHand, currentPlayer]
   where
-    -- TODO: Don't hardcode selected pile
-    topPiles = createTopPiles (gs ^. looking) (getPiles gs)
+    topPiles = createTopPiles (gs ^. looking) (gs ^. selpileft, gs ^. selpilefi) (getPiles gs)
     playerHand = createPlayerHand (gs ^. looking) (gs ^. selpileft, gs ^. selcdidx) (getCurrPCards gs)
+    currentPlayer = hCenter $ str $ "Currently playing: Player " ++ show (getCurrP gs) ++ " Selected: " ++ show (gs ^. selpileft, gs ^. selpilefi, gs ^. selcdidx) ++ " Looking: " ++ show (gs ^. looking)
 
 --- PILES
 
@@ -64,8 +64,8 @@ draw gs = vBox [topPiles, playerHand]
 -- selected pile, return the widget for the piles of the board.
 -- This expects a list of four elements - top pile, right pile, bottom pile,
 -- left pile.
-createTopPiles :: Look -> [[Card]] -> Widget ()
-createTopPiles look piles =
+createTopPiles :: Look -> (Maybe PileType, Maybe Int) -> [[Card]] -> Widget ()
+createTopPiles look selInfo piles =
   vBox $
     map
       ( padTopBottom pileVertPadding
@@ -79,17 +79,30 @@ createTopPiles look piles =
       ]
   where
     [topLeftWidget, topWidget, topRightWidget, leftWidget, _, rightWidget, bottomLeftWidget, bottomWidget, bottomRightWidget] =
-      placeFunc look $
+      setSelected selInfo $
+      setLooking look $
         map pileToOverlap piles
 
     -- created separately because we don't want to display what card draw is
-    drawWidget = drawSelect look (cardWidget "deck")
+    drawWidget = drawSelect look selInfo (cardWidget "deck")
       where
-        drawSelect (PileLook 4) = isViewed
-        drawSelect _ = id
+        drawSelect (PileLook 4) _ = isViewed
+        drawSelect _ (Just DrawP, Just 0) = isSelected -- error case, shouldn't be possible
+                                                       -- TODO: remove draw from hover/selection
+        drawSelect _ _ = id
 
-    placeFunc (PileLook pileidx) = modifyAt pileidx isViewed
-    placeFunc _ = id
+    setLooking (PileLook pileidx) = modifyAt pileidx isViewed
+    setLooking _ = id
+
+    setSelected (Just CornerP, Just 0) = modifyAt 0 isSelected
+    setSelected (Just CenterP, Just 0) = modifyAt 1 isSelected
+    setSelected (Just CornerP, Just 1) = modifyAt 2 isSelected
+    setSelected (Just CenterP, Just 1) = modifyAt 3 isSelected
+    setSelected (Just CenterP, Just 2) = modifyAt 5 isSelected
+    setSelected (Just CornerP, Just 2) = modifyAt 6 isSelected
+    setSelected (Just CenterP, Just 3) = modifyAt 7 isSelected
+    setSelected (Just CornerP, Just 3) = modifyAt 8 isSelected
+    setSelected _ = id
 
 --- Given a pile, return a widget showing the top and bottom card of the pile
 pileToOverlap :: [Card] -> Widget ()

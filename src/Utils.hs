@@ -16,11 +16,11 @@ module Utils
     makeSecondSelection,
     haveSelection,
     getPiles,
-    updateToPlay,
     updateSelCardIdx,
     updateSelPileIdx,
     updateSelPileType,
-    getMoveFromState
+    getMoveFromState,
+    updateToPlay
   ) where
 
 import Data.Maybe (fromMaybe, isJust)
@@ -106,32 +106,35 @@ makeSelection gs = case gs ^. selpileft of
                       updateSelPileIdx True (Just $ getCurrP gs) $
                       updateSelCardIdx (Just idx) $
                       updateSelPileType True (Just PlayerP) gs
-    PileLook _pileidx -> undefined
+    PileLook _pileidx -> setLook (PileLook 0) $
+                         updateSelPileIdx True (Just idx) $
+                         updateSelPileType True (Just piletype) gs
+      where
+        (piletype, idx) = lookToTypeAndIdx (gs ^. looking)
   Just _ -> gs -- TODO: allow undoing selection
 
 -- doesn't check for existing selection, this will always overwrite
 makeSecondSelection :: GSt -> GSt
 makeSecondSelection gs = case gs ^. looking of
   PlayerLook _ -> error "impossible, can't select from deck for second selection"
-  PileLook pileidx -> updateSelPileIdx False (Just $ calcGSPileIdx pileidx) $
-                      updateSelPileType False (Just $ calcPileType pileidx) gs
+  PileLook _ -> updateSelPileIdx False (Just idx) $
+                updateSelPileType False (Just piletype) gs
     where
-      calcPileType 0 = CornerP
-      calcPileType 2 = CornerP
-      calcPileType 6 = CornerP
-      calcPileType 8 = CornerP
-      calcPileType 4 = DrawP -- error case, can't select draw pile
-      calcPileType _ = CenterP
+      (piletype, idx) = lookToTypeAndIdx (gs ^. looking)
 
-      calcGSPileIdx 0 = 0
-      calcGSPileIdx 2 = 1
-      calcGSPileIdx 6 = 2
-      calcGSPileIdx 8 = 3
-      calcGSPileIdx 1 = 0
-      calcGSPileIdx 3 = 1
-      calcGSPileIdx 5 = 2
-      calcGSPileIdx 7 = 3
-      calcGSPileIdx 4 = 0 -- error case, can't select draw pile
+
+-- Convert a PileLook into a PileType and PileIdx
+lookToTypeAndIdx :: Look -> (PileType, Int)
+lookToTypeAndIdx (PileLook 0) = (CornerP, 0) -- topleft
+lookToTypeAndIdx (PileLook 1) = (CenterP, 0) -- top
+lookToTypeAndIdx (PileLook 2) = (CornerP, 1) -- topright
+lookToTypeAndIdx (PileLook 3) = (CenterP, 1) -- left
+lookToTypeAndIdx (PileLook 5) = (CenterP, 2) -- right
+lookToTypeAndIdx (PileLook 6) = (CornerP, 2) -- botleft
+lookToTypeAndIdx (PileLook 7) = (CenterP, 3) -- bottom
+lookToTypeAndIdx (PileLook 8) = (CornerP, 3) -- botright
+lookToTypeAndIdx (PileLook 4) = (DrawP, 0) -- error case, should not select drawP
+lookToTypeAndIdx _ = undefined
 
 haveSelection :: GSt -> Bool
 haveSelection gs = isJust (gs ^. selpileft)

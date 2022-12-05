@@ -33,7 +33,8 @@ handleEvent gs (VtyEvent (EvKey KLeft _)) =
 -- or trying to make a move
 handleEvent gs (VtyEvent (EvKey KEnter _)) = case gs ^. selpileft of
   Nothing -> continue $ makeSelection gs -- there is no selection, make first selection
-  Just _ -> if canMove newGS move then continue $ makeMove newGS move else error "invalid move"
+  -- TODO: error popup when move is invalid to let user know
+  Just _ -> if canMove newGS move then continue $ makeMove newGS move else continue $ resetMove gs
     where
       move = getMoveFromState newGS
       newGS = makeSecondSelection gs -- we have already made a selection, this one is our move
@@ -47,6 +48,9 @@ handleEvent gs (VtyEvent (EvKey KDown _))
   | not $ haveSelection gs = case gs ^. looking of
       PileLook _ -> continue $ setLook (PlayerLook 0) gs
       _ -> continue gs
+-- n goes to Next player
+handleEvent gs (VtyEvent (EvKey (KChar 'n') _)) = continue $ nextPlayer gs
+
 -- Esc quits game
 handleEvent s (VtyEvent (EvKey KEsc [])) = halt s
 -- Everything else does not change state

@@ -3,7 +3,9 @@
 module GamePlay
   ( canMove,
     makeMove,
-    getScore
+    getScore,
+    resetMove,
+    nextPlayer
   ) where
 
 import Data.Maybe (isJust, fromMaybe)
@@ -69,6 +71,7 @@ checkCenterMove gameState cpileidx pcard@(Card pr _)
 checkCornerMove :: GSt -> Int -> Card -> Bool
 checkCornerMove gameState cpileidx pcard@(Card pr _)
     | iscpileempty && (pr == RK)        = True
+    | iscpileempty && (pr /= RK)        = False
     | otherwise                         = isNextCard pcard (getCornerTop gameState cpileidx)
     where
         iscpileempty    = null (((gameState ^. field . cornerPiles) !! cpileidx) ^. cards)
@@ -128,6 +131,17 @@ canMove gameState move
         tpileidx        = fromMaybe topOfPileIdx (move ^. tPileIdx)
         isdrawnotempty  = not (null (gameState ^. field . drawPile . cards))
 
+-- Updates the toplay index and draws a card for the next player.
+nextPlayer :: GSt -> GSt
+nextPlayer gs = updateToPlay nextPlayer gsAfterDraw 
+  where
+    nextPlayer = (getCurrP gs + 1) `mod` length (getPHands gs) 
+    gsForDraw = updateSelPileType True (Just DrawP) $
+                 updateSelPileType False (Just PlayerP) $
+                 updateSelPileIdx False (Just nextPlayer) gs
+    gsAfterDraw = makeMove gsForDraw (getMoveFromState gsForDraw)
+
+
 -- Helper functions to execute move
 
 replaceInArr :: [a] -> Int -> a -> [a]
@@ -173,6 +187,20 @@ makeDrawMove iGameState pIdx = GSt { _field     = newfield,
                              _pileType  = PlayerP
                            }
         newphands   = replaceInArr (getPHands iGameState) pIdx newphand
+
+-- Update game state to remove failed move
+resetMove :: GSt -> GSt
+resetMove gs = GSt { _field = gs ^. field,
+                     _seed = gs ^. seed,
+                     _history = gs ^. history,
+                     _toplay = gs ^. toplay,
+                     _looking = PlayerLook 0,
+                     _selcdidx  = Nothing,
+                     _selpileft = Nothing,
+                     _selpilefi = Nothing,
+                     _selpilett = Nothing,
+                     _selpileti = Nothing
+                   }
 
 -- Update game state for a card from player hand to center pile
 
