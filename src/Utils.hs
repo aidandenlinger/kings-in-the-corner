@@ -11,6 +11,7 @@ module Utils
     getCurrPCards,
     incLook,
     decLook,
+    setLook,
     makeSelection,
     makeSecondSelection,
     haveSelection,

@@ -7,11 +7,11 @@ where
 
 import Brick
 import CardTypes
+import GamePlay
 import Graphics.Vty.Input (Event (..), Key (..))
+import Lens.Micro
 import Lens.Micro.TH (makeLenses)
 import Utils
-import Lens.Micro
-import GamePlay
 
 type GameState = GSt
 
@@ -39,10 +39,14 @@ handleEvent gs (VtyEvent (EvKey KEnter _)) = case gs ^. selpileft of
       newGS = makeSecondSelection gs -- we have already made a selection, this one is our move
 
 -- Up and Down move between decks
--- handleEvent (sel, place, numCards) (VtyEvent (EvKey KUp _)) =
---   continue (sel, (place + 1) `mod` 4, numCards)
--- handleEvent (sel, place, numCards) (VtyEvent (EvKey KDown _)) =
---   continue (sel, (place - 1) `mod` 4, numCards)
+handleEvent gs (VtyEvent (EvKey KUp _))
+  | not $ haveSelection gs = case gs ^. looking of
+      PlayerLook _ -> continue $ setLook (PileLook 0) gs
+      _ -> continue gs
+handleEvent gs (VtyEvent (EvKey KDown _))
+  | not $ haveSelection gs = case gs ^. looking of
+      PileLook _ -> continue $ setLook (PlayerLook 0) gs
+      _ -> continue gs
 -- Esc quits game
 handleEvent s (VtyEvent (EvKey KEsc [])) = halt s
 -- Everything else does not change state
