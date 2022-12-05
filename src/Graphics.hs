@@ -8,7 +8,6 @@ import Brick.Widgets.Border.Style as BS
 import Brick.Widgets.Center
 import CardTypes
 import Data.List.Index (modifyAt)
-import Graphics.Vty (Event (..), Key (..))
 import Graphics.Vty.Attributes (Attr, defAttr)
 import Graphics.Vty.Attributes.Color (blue, green)
 import Lens.Micro
@@ -16,6 +15,7 @@ import Lens.Micro.TH (makeLenses)
 import System.Exit (exitSuccess)
 import System.Random (initStdGen)
 import Utils
+import Events
 
 --- LENSES
 
@@ -169,24 +169,6 @@ isSelected = withAttr (attrName "selected_card")
 placeCard :: Widget n -> Widget n
 placeCard = withAttr (attrName "place_card")
 
---- EVENT HANDLING
-
-handleEvent :: GameState -> BrickEvent n e -> EventM n (Next GameState)
--- Left and Right move between player cards
-handleEvent gs (VtyEvent (EvKey KRight _)) =
-  continue $ incLook gs
-handleEvent gs (VtyEvent (EvKey KLeft _)) =
-  continue $ decLook gs
--- Up and Down move between decks
--- handleEvent (sel, place, numCards) (VtyEvent (EvKey KUp _)) =
---   continue (sel, (place + 1) `mod` 4, numCards)
--- handleEvent (sel, place, numCards) (VtyEvent (EvKey KDown _)) =
---   continue (sel, (place - 1) `mod` 4, numCards)
--- Esc quits game
-handleEvent s (VtyEvent (EvKey KEsc [])) = halt s
--- Everything else does not change state
-handleEvent s _ = continue s
-
 --- GAME START
 
 gameStart :: IO ()
@@ -197,7 +179,7 @@ gameStart = do
             appDraw = \s -> [draw s],
             -- given state and an event, describe how to change state. the app
             -- is then redrawn
-            appHandleEvent = handleEvent,
+            appHandleEvent = handleEvent, -- in Event.hs
             -- returns an EventM that runs at app start, this is a demo,
             -- there's nothing to do at start, return
             appStartEvent = return,
