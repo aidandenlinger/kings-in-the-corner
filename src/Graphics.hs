@@ -55,8 +55,8 @@ draw :: GameState -> Widget ()
 draw gs = vBox [topPiles, playerHand]
   where
     -- TODO: Don't hardcode selected pile
-    topPiles = createTopPiles 0 (gs ^. field)
-    playerHand = createPlayerHand (gs ^. lookcd) (map (^. card) (((gs ^. field . phands) !! (gs ^. toplay)) ^. cards))
+    topPiles = createTopPiles (gs ^. looking) (gs ^. field)
+    playerHand = createPlayerHand (gs ^. looking) (getCurrPCards gs)
 
 --- PILES
 
@@ -66,8 +66,8 @@ draw gs = vBox [topPiles, playerHand]
 -- left pile. TODO: better datatype in the future, order shouldn't matter
 -- TODO: Don't use an Int to signify what pile we're pointing at, use an enum
 -- TODO: Don't just always select 1st pile
-createTopPiles :: Int -> Field -> Widget ()
-createTopPiles place piles =
+createTopPiles :: Look -> Field -> Widget ()
+createTopPiles _ piles =
   vBox $
     map
       ( padTopBottom pileVertPadding
@@ -76,13 +76,13 @@ createTopPiles place piles =
           . map (padLeftRight pileHorizPadding)
       )
       -- TODO: fill corner and middle decks with real values
-      [ [(cardWidgetItalic "top\nleft"), topWidget, (cardWidgetItalic "top\nrigh\nt")],
+      [ [cardWidgetItalic "", topWidget, cardWidgetItalic ""],
         [leftWidget, cardWidget "deck", rightWidget],
-        [translateBy (Location (0, 2)) (cardWidgetItalic "bot\nleft"), bottomWidget, translateBy (Location (0, 2)) (cardWidgetItalic "bot\nrigh\nt")]
+        [translateBy (Location (0, 2)) (cardWidgetItalic ""), bottomWidget, translateBy (Location (0, 2)) (cardWidgetItalic "")]
       ]
   where
     [topWidget, rightWidget, bottomWidget, leftWidget] =
-      modifyAt place placeCard $
+      -- modifyAt place placeCard $ -- TODO: Selecting widgets
         map pileToOverlap centerPileCards
 
     centerPileCards :: [[Card]]
@@ -97,12 +97,15 @@ pileToOverlap pile = vBox [cardWidgetHalf bottomCard, cardWidget topCard]
 
 -- Given an index of selected card and list of cards, return a widget of the
 -- player's hand.
-createPlayerHand :: Int -> [Card] -> Widget ()
+createPlayerHand :: Look -> [Card] -> Widget ()
 createPlayerHand sel hand =
   center $
     hBox $
-      modifyAt sel isSelected $
+      selFunction sel $
         map (padLeftRight handPadding . cardWidget . show) hand
+  where
+    selFunction (PlayerLook idx) = modifyAt idx isSelected
+    selFunction _ = id
 
 --- CARDS AND STYLE
 
@@ -171,13 +174,9 @@ placeCard = withAttr (attrName "place_card")
 handleEvent :: GameState -> BrickEvent n e -> EventM n (Next GameState)
 -- Left and Right move between player cards
 handleEvent gs (VtyEvent (EvKey KRight _)) =
-  continue $ over lookcd (\b -> (b + 1) `mod` playerHandLength) gs
-  where
-    playerHandLength = length $ ((gs ^. field . phands) !! (gs ^. toplay)) ^. cards
+  continue $ incLook gs
 handleEvent gs (VtyEvent (EvKey KLeft _)) =
-  continue $ over lookcd (\b -> (b - 1) `mod` playerHandLength) gs
-  where
-    playerHandLength = length $ ((gs ^. field . phands) !! (gs ^. toplay)) ^. cards
+  continue $ decLook gs
 -- Up and Down move between decks
 -- handleEvent (sel, place, numCards) (VtyEvent (EvKey KUp _)) =
 --   continue (sel, (place + 1) `mod` 4, numCards)
