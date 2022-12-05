@@ -90,6 +90,7 @@ createTopPiles _ piles =
 
 --- Given a pile, return a widget showing the top and bottom card of the pile
 pileToOverlap :: [Card] -> Widget ()
+pileToOverlap [singleCard] = cardWidget (show singleCard)
 pileToOverlap pile = vBox [cardWidgetHalf bottomCard, cardWidget topCard]
   where
     bottomCard = show (last pile)
