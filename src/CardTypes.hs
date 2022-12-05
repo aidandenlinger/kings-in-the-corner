@@ -101,7 +101,7 @@ data Field = Field { _drawPile    :: Pile
                    , _phands  :: [Pile]
                    } deriving (Eq, Show)
 
-data Look = PlayerLook Int | PileLook PileType Int deriving (Eq, Show)
+data Look = PlayerLook Int | PileLook Int deriving (Eq, Show)
 
 -- Gamestate data type recording game history and current play situation
 

@@ -31,7 +31,7 @@ handleEvent gs (VtyEvent (EvKey KLeft _)) =
 -- Enter is our generic enter key. We are either making our first selection
 -- or trying to make a move
 handleEvent gs (VtyEvent (EvKey KEnter _)) = case gs ^. selpileft of
-  Nothing -> continue $ lookToFromSelection gs -- there is no selection, make first selection
+  Nothing -> continue $ makeSelection gs -- there is no selection, make first selection
   Just _ -> undefined -- we have already made a selection, this one is our move
 
 -- Up and Down move between decks

@@ -11,7 +11,9 @@ module Utils
     getCurrPCards,
     incLook,
     decLook,
-    lookToFromSelection,
+    makeSelection,
+    haveSelection,
+    getPiles,
     updateToPlay,
     updateSelCardIdx,
     updateSelPileIdx,
@@ -19,13 +21,14 @@ module Utils
     getMoveFromState
   ) where
 
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, isJust)
 import Lens.Micro ( (^.), (%~), (&), (.~), (^?!), _head, set )
 import Lens.Micro.TH (makeLenses)
 import qualified System.Random         as R (next, StdGen)
 import qualified System.Random.Shuffle as R (shuffle')
 
 import CardTypes
+import Data.List (transpose)
 
 -------------------------------------------------------------------------------
 -- Convert data types from CardTypes to Lenses for easy access
@@ -69,17 +72,23 @@ getCurrP gameState = gameState ^. toplay
 getPHands :: GSt -> [Pile]
 getPHands gameState = gameState ^. field . phands
 
+pileToCards :: Pile -> [Card]
+pileToCards p = map (^. card) (p ^. cards)
+
 -- Get player cards for current player
 getCurrPCards :: GSt -> [Card]
-getCurrPCards gameState = map (^. card) ((getPHands gameState !! getCurrP gameState) ^. cards)
+getCurrPCards gameState = pileToCards (getPHands gameState !! getCurrP gameState)
 
 -- Look functions
 updateLook :: (Int -> Int) -> GSt -> GSt
 updateLook func gameState = case gameState ^. looking of
-  PlayerLook idx -> gameState & looking .~ newLook
-    where
-      newLook = PlayerLook (func idx `mod` length (getCurrPCards gameState))
-  PileLook _piletype _pileidx -> undefined
+  PlayerLook idx -> flip setLook gameState $
+                    PlayerLook (func idx `mod` length (getCurrPCards gameState))
+  PileLook idx -> flip setLook gameState $
+                  PileLook (func idx `mod` length (getPiles gameState))
+
+setLook :: Look -> GSt -> GSt
+setLook l gs = gs & looking .~ l
 
 incLook :: GSt -> GSt
 incLook = updateLook (+ 1)
@@ -87,14 +96,29 @@ incLook = updateLook (+ 1)
 decLook :: GSt -> GSt
 decLook = updateLook (\x -> x - 1)
 
-lookToFromSelection :: GSt -> GSt
-lookToFromSelection gs = case gs ^. selpileft of
+makeSelection :: GSt -> GSt
+makeSelection gs = case gs ^. selpileft of
   Nothing -> case gs ^. looking of
-    PlayerLook idx -> updateSelPileIdx True (Just $ getCurrP gs) $
+    -- move Look to GameState selection, start looking at piles
+    PlayerLook idx -> setLook (PileLook 0) $
+                      updateSelPileIdx True (Just $ getCurrP gs) $
                       updateSelCardIdx (Just idx) $
                       updateSelPileType True (Just PlayerP) gs
-    PileLook _piletype _pileidx -> undefined
+    PileLook _pileidx -> undefined
   Just _ -> gs -- TODO: allow undoing selection
+
+haveSelection :: GSt -> Bool
+haveSelection gs = isJust (gs ^. selpileft)
+
+-- Gets the center and corner piles for graphics. DOES NOT GET DRAW PILE (since we don't want
+-- to display what the draw card is!)
+-- <https://stackoverflow.com/a/22702925>
+getPiles :: GSt -> [[Card]]
+getPiles gs = map pileToCards [topleft, top, topright, left, draw, right, bottomleft, bottom, bottomright]
+  where
+    draw = gs ^. field . drawPile
+    [topleft, topright, bottomleft, bottomright] = gs ^. field . cornerPiles
+    [top, left, right, bottom] = gs ^. field . centerPiles
 
 -- Update the index of the player currently to play
 

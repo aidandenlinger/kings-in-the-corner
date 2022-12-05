@@ -55,7 +55,7 @@ draw :: GameState -> Widget ()
 draw gs = vBox [topPiles, playerHand]
   where
     -- TODO: Don't hardcode selected pile
-    topPiles = createTopPiles (gs ^. looking) (gs ^. field)
+    topPiles = createTopPiles (gs ^. looking) (getPiles gs)
     playerHand = createPlayerHand (gs ^. looking) (gs ^. selpileft, gs ^. selcdidx) (getCurrPCards gs)
 
 --- PILES
@@ -63,11 +63,9 @@ draw gs = vBox [topPiles, playerHand]
 -- Given the top, right, bottom, and left pile, along with the currently
 -- selected pile, return the widget for the piles of the board.
 -- This expects a list of four elements - top pile, right pile, bottom pile,
--- left pile. TODO: better datatype in the future, order shouldn't matter
--- TODO: Don't use an Int to signify what pile we're pointing at, use an enum
--- TODO: Don't just always select 1st pile
-createTopPiles :: Look -> Field -> Widget ()
-createTopPiles _ piles =
+-- left pile.
+createTopPiles :: Look -> [[Card]] -> Widget ()
+createTopPiles look piles =
   vBox $
     map
       ( padTopBottom pileVertPadding
@@ -75,21 +73,27 @@ createTopPiles _ piles =
           . hBox
           . map (padLeftRight pileHorizPadding)
       )
-      -- TODO: fill corner and middle decks with real values
-      [ [cardWidgetItalic "", topWidget, cardWidgetItalic ""],
-        [leftWidget, cardWidget "deck", rightWidget],
-        [translateBy (Location (0, 2)) (cardWidgetItalic ""), bottomWidget, translateBy (Location (0, 2)) (cardWidgetItalic "")]
+      [ [topLeftWidget, topWidget, topRightWidget],
+        [leftWidget, drawWidget, rightWidget],
+        [bottomLeftWidget, bottomWidget, bottomRightWidget]
       ]
   where
-    [topWidget, rightWidget, bottomWidget, leftWidget] =
-      -- modifyAt place placeCard $ -- TODO: Selecting widgets
-        map pileToOverlap centerPileCards
+    [topLeftWidget, topWidget, topRightWidget, leftWidget, _, rightWidget, bottomLeftWidget, bottomWidget, bottomRightWidget] =
+      placeFunc look $
+        map pileToOverlap piles
 
-    centerPileCards :: [[Card]]
-    centerPileCards = map (map (^. card) . (^. cards)) (piles ^. centerPiles)
+    -- created separately because we don't want to display what card draw is
+    drawWidget = drawSelect look (cardWidget "deck")
+      where
+        drawSelect (PileLook 4) = isViewed
+        drawSelect _ = id
+
+    placeFunc (PileLook pileidx) = modifyAt pileidx isViewed
+    placeFunc _ = id
 
 --- Given a pile, return a widget showing the top and bottom card of the pile
 pileToOverlap :: [Card] -> Widget ()
+pileToOverlap [] = emptyCardWidget
 pileToOverlap [singleCard] = cardWidget (show singleCard)
 pileToOverlap pile = vBox [cardWidgetHalf bottomCard, cardWidget topCard]
   where
@@ -102,9 +106,10 @@ createPlayerHand :: Look -> (Maybe PileType, Maybe Int) -> [Card] -> Widget ()
 createPlayerHand look sel hand =
   center $
     hBox $
+      map (padLeftRight handPadding) $
       lookFunction look $
       selFunction sel $
-        map (padLeftRight handPadding . cardWidget . show) hand
+        map (cardWidget . show) hand
   where
     lookFunction (PlayerLook idx) = modifyAt idx isViewed
     lookFunction _ = id
@@ -143,6 +148,9 @@ cardWidgetHalf n =
   where
     halfCardHeight = max 2 (cardHeight `div` 2)
 
+emptyCardWidget :: Widget n
+emptyCardWidget = createCard (padBottom Max . padRight Max) "    "
+
 -- stolen from
 -- <https://github.com/ambuc/solitaire/blob/0ada6e445c85f2f61c15081be49a99df6e272d29/src/Render.hs#L18>
 -- given a widget, sets the border to be rounded :)
@@ -164,7 +172,9 @@ italicStyle = withBorderStyle custom . border
 
 -- attributes that widgets can use
 attrs :: [(AttrName, Attr)]
-attrs = [(attrName "viewed_card", fg blue), (attrName "selected_card", fg yellow), (attrName "place_card", fg green)]
+attrs = [(attrName "viewed_card", bg blue),
+         (attrName "selected_card", bg green),
+         (attrName "place_card", fg green)]
 
 -- marks a card as selected
 isViewed :: Widget n -> Widget n
