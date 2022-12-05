@@ -11,6 +11,7 @@ module Utils
     getCurrPCards,
     incLook,
     decLook,
+    lookToFromSelection,
     updateToPlay,
     updateSelCardIdx,
     updateSelPileIdx,
@@ -72,7 +73,7 @@ getPHands gameState = gameState ^. field . phands
 getCurrPCards :: GSt -> [Card]
 getCurrPCards gameState = map (^. card) ((getPHands gameState !! getCurrP gameState) ^. cards)
 
--- Inc look
+-- Look functions
 updateLook :: (Int -> Int) -> GSt -> GSt
 updateLook func gameState = case gameState ^. looking of
   PlayerLook idx -> gameState & looking .~ newLook
@@ -85,6 +86,15 @@ incLook = updateLook (+ 1)
 
 decLook :: GSt -> GSt
 decLook = updateLook (\x -> x - 1)
+
+lookToFromSelection :: GSt -> GSt
+lookToFromSelection gs = case gs ^. selpileft of
+  Nothing -> case gs ^. looking of
+    PlayerLook idx -> updateSelPileIdx True (Just $ getCurrP gs) $
+                      updateSelCardIdx (Just idx) $
+                      updateSelPileType True (Just PlayerP) gs
+    PileLook _piletype _pileidx -> undefined
+  Just _ -> gs -- TODO: allow undoing selection
 
 -- Update the index of the player currently to play
 

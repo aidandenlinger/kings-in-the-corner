@@ -19,6 +19,8 @@ import qualified System.Random as R (StdGen)
 
 -- Base code borrowed from https://github.com/ambuc/solitaire
 
+
+
 -- CARD TYPES ------------------------------------------------------------------
 -- Define basic data types to handle cards
 
