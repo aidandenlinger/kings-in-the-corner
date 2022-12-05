@@ -12,6 +12,7 @@ module Utils
     incLook,
     decLook,
     makeSelection,
+    makeSecondSelection,
     haveSelection,
     getPiles,
     updateToPlay,
@@ -106,6 +107,30 @@ makeSelection gs = case gs ^. selpileft of
                       updateSelPileType True (Just PlayerP) gs
     PileLook _pileidx -> undefined
   Just _ -> gs -- TODO: allow undoing selection
+
+-- doesn't check for existing selection, this will always overwrite
+makeSecondSelection :: GSt -> GSt
+makeSecondSelection gs = case gs ^. looking of
+  PlayerLook _ -> error "impossible, can't select from deck for second selection"
+  PileLook pileidx -> updateSelPileIdx False (Just $ calcGSPileIdx pileidx) $
+                      updateSelPileType False (Just $ calcPileType pileidx) gs
+    where
+      calcPileType 0 = CornerP
+      calcPileType 2 = CornerP
+      calcPileType 6 = CornerP
+      calcPileType 8 = CornerP
+      calcPileType 4 = DrawP -- error case, can't select draw pile
+      calcPileType _ = CenterP
+
+      calcGSPileIdx 0 = 0
+      calcGSPileIdx 2 = 1
+      calcGSPileIdx 6 = 2
+      calcGSPileIdx 8 = 3
+      calcGSPileIdx 1 = 0
+      calcGSPileIdx 3 = 1
+      calcGSPileIdx 5 = 2
+      calcGSPileIdx 7 = 3
+      calcGSPileIdx 4 = 0 -- error case, can't select draw pile
 
 haveSelection :: GSt -> Bool
 haveSelection gs = isJust (gs ^. selpileft)

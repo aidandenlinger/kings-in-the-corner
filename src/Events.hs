@@ -11,6 +11,7 @@ import Graphics.Vty.Input (Event (..), Key (..))
 import Lens.Micro.TH (makeLenses)
 import Utils
 import Lens.Micro
+import GamePlay
 
 type GameState = GSt
 
@@ -32,7 +33,10 @@ handleEvent gs (VtyEvent (EvKey KLeft _)) =
 -- or trying to make a move
 handleEvent gs (VtyEvent (EvKey KEnter _)) = case gs ^. selpileft of
   Nothing -> continue $ makeSelection gs -- there is no selection, make first selection
-  Just _ -> undefined -- we have already made a selection, this one is our move
+  Just _ -> if canMove newGS move then continue $ makeMove newGS move else error "invalid move"
+    where
+      move = getMoveFromState newGS
+      newGS = makeSecondSelection gs -- we have already made a selection, this one is our move
 
 -- Up and Down move between decks
 -- handleEvent (sel, place, numCards) (VtyEvent (EvKey KUp _)) =
