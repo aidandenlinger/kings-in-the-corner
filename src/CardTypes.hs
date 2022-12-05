@@ -11,6 +11,7 @@ module CardTypes
   , PileType(..)
   , Rank(..) 
   , Suit(..)
+  , Move(..)
   ) where
 
 import qualified System.Random as R (StdGen)
@@ -73,8 +74,9 @@ data DisplayMode = Stacked | Splayed | Sp3           deriving (Eq, Show, Ord)
 -- DrawP    : The pile in the center from which the cards are drawn
 -- CenterP  : One of the 4 piles along the straight lines from the center
 -- CornerP  : One of the 4 piles in the corner headed by a King
+-- NullP    : To handle no selected pile
 
-data PileType    = PlayerP | DrawP | CenterP | CornerP deriving (Eq, Show)
+data PileType    = PlayerP | DrawP | CenterP | CornerP | NullP deriving (Eq, Show)
 
 -- Data type for pile of cards.X
 
@@ -98,10 +100,15 @@ data Field = Field { _draw    :: Pile
 
 -- Gamestate data type recording game history and current play situation
 
-data GSt = GSt { _field   :: Field            -- Current state of decks
-               , _seed    :: R.StdGen         -- A random seed to be passed thru
-               , _history :: [(Field, Int)]   -- List of previous fields and corresponding player ids
-               , _toplay  :: Int              -- Player id of the one with next move
+data GSt = GSt { _field     :: Field            -- Current state of decks
+               , _seed      :: R.StdGen         -- A random seed to be passed thru
+               , _history   :: [(Field, Int)]   -- List of previous fields and corresponding player ids
+               , _toplay    :: Int              -- Player id of the one with next move
+               , _selpileft :: Maybe PileType   -- Pile type of the from pile if selected
+               , _selpilefi :: Maybe Int        -- Pile idx of the from pile if selected
+               , _selcdidx  :: Maybe Int        -- Card idx from the from pile if selected
+               , _selpilett :: Maybe PileType   -- Pile type of the to pile if selected
+               , _selpileti :: Maybe Int        -- Pile idx of the to pile if selected
                } deriving (Show)
 
 -- DISPLAY TYPES ---------------------------------------------------------------
@@ -112,8 +119,11 @@ data Color  = Red | Black                       deriving (Eq, Show, Ord)
 
 data Axis   = NS | EW deriving (Eq, Show) -- data type for pile splay orientation
 
--- data Action = New | Undo deriving (Eq, Show, Ord) -- data type for button action
+-- Data type for capturing a suggested move
 
--- data Ext = StockX | WasteX | TableX | FoundX -- named extents for click regions
---          | IdX Int | DCX DCard | ActionX Action
---   deriving (Eq, Show, Ord)
+data Move   = Move {  _fPileType  :: PileType, -- Type of pile to take the card / pile from
+                      _fPileIdx   :: Maybe Int,-- Index of the pile in an array of piles. Nothing if fPileType is drawP
+                      _fCardIdx   :: Maybe Int,-- Index of card in the pile to be placed. Applies only to player hands. Nothing otherwise
+                      _tPileType  :: PileType, -- Type of pile to place the card / pile on
+                      _tPileIdx   :: Maybe Int       
+                      } deriving (Show)
