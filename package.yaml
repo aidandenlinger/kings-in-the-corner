@@ -42,10 +42,10 @@ library:
   - microlens
   - random-shuffle
   - random
+  - split
   - text
   - vty
   - ilist
-  - split
 
 executables:
   kings-in-the-corner-exe:
