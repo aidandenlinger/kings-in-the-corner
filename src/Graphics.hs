@@ -9,7 +9,7 @@ import Brick.Widgets.Center
 import CardTypes
 import Data.List.Index (modifyAt)
 import Graphics.Vty.Attributes (Attr, defAttr)
-import Graphics.Vty.Attributes.Color (blue, green)
+import Graphics.Vty.Attributes.Color
 import Lens.Micro
 import Lens.Micro.TH (makeLenses)
 import System.Exit (exitSuccess)
@@ -56,7 +56,7 @@ draw gs = vBox [topPiles, playerHand]
   where
     -- TODO: Don't hardcode selected pile
     topPiles = createTopPiles (gs ^. looking) (gs ^. field)
-    playerHand = createPlayerHand (gs ^. looking) (getCurrPCards gs)
+    playerHand = createPlayerHand (gs ^. looking) (gs ^. selpileft, gs ^. selcdidx) (getCurrPCards gs)
 
 --- PILES
 
@@ -95,16 +95,20 @@ pileToOverlap pile = vBox [cardWidgetHalf bottomCard, cardWidget topCard]
     bottomCard = show (last pile)
     topCard = show (head pile)
 
--- Given an index of selected card and list of cards, return a widget of the
+-- Given an index of viewed card, selected card, and list of cards, return a widget of the
 -- player's hand.
-createPlayerHand :: Look -> [Card] -> Widget ()
-createPlayerHand sel hand =
+createPlayerHand :: Look -> (Maybe PileType, Maybe Int) -> [Card] -> Widget ()
+createPlayerHand look sel hand =
   center $
     hBox $
+      lookFunction look $
       selFunction sel $
         map (padLeftRight handPadding . cardWidget . show) hand
   where
-    selFunction (PlayerLook idx) = modifyAt idx isSelected
+    lookFunction (PlayerLook idx) = modifyAt idx isViewed
+    lookFunction _ = id
+
+    selFunction (Just PlayerP, Just idx) = modifyAt idx isSelected 
     selFunction _ = id
 
 --- CARDS AND STYLE
@@ -159,9 +163,12 @@ italicStyle = withBorderStyle custom . border
 
 -- attributes that widgets can use
 attrs :: [(AttrName, Attr)]
-attrs = [(attrName "selected_card", fg blue), (attrName "place_card", fg green)]
+attrs = [(attrName "viewed_card", fg blue), (attrName "selected_card", fg yellow), (attrName "place_card", fg green)]
 
 -- marks a card as selected
+isViewed :: Widget n -> Widget n
+isViewed = withAttr (attrName "viewed_card")
+
 isSelected :: Widget n -> Widget n
 isSelected = withAttr (attrName "selected_card")
 
