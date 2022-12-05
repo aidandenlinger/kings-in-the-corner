@@ -16,11 +16,11 @@ module Utils
     makeSecondSelection,
     haveSelection,
     getPiles,
-    updateToPlay,
     updateSelCardIdx,
     updateSelPileIdx,
     updateSelPileType,
-    getMoveFromState
+    getMoveFromState,
+    updateToPlay
   ) where
 
 import Data.Maybe (fromMaybe, isJust)

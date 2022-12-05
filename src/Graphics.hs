@@ -52,11 +52,11 @@ type GameState = GSt
 
 -- Given the GameState, return the widget to draw
 draw :: GameState -> Widget ()
-draw gs = vBox [topPiles, playerHand]
+draw gs = vBox [topPiles, playerHand, currentPlayer]
   where
-    -- TODO: Don't hardcode selected pile
     topPiles = createTopPiles (gs ^. looking) (getPiles gs)
     playerHand = createPlayerHand (gs ^. looking) (gs ^. selpileft, gs ^. selcdidx) (getCurrPCards gs)
+    currentPlayer = hCenter $ str $ "Currently playing: Player " ++ show (getCurrP gs)
 
 --- PILES
 

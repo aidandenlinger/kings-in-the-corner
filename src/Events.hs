@@ -48,6 +48,9 @@ handleEvent gs (VtyEvent (EvKey KDown _))
   | not $ haveSelection gs = case gs ^. looking of
       PileLook _ -> continue $ setLook (PlayerLook 0) gs
       _ -> continue gs
+-- n goes to Next player
+handleEvent gs (VtyEvent (EvKey (KChar 'n') _)) = continue $ nextPlayer gs
+
 -- Esc quits game
 handleEvent s (VtyEvent (EvKey KEsc [])) = halt s
 -- Everything else does not change state
