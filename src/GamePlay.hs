@@ -3,7 +3,8 @@
 module GamePlay
   ( canMove,
     makeMove,
-    getScore
+    getScore,
+    resetMove
   ) where
 
 import Data.Maybe (isJust, fromMaybe)
@@ -173,6 +174,20 @@ makeDrawMove iGameState pIdx = GSt { _field     = newfield,
                              _pileType  = PlayerP
                            }
         newphands   = replaceInArr (getPHands iGameState) pIdx newphand
+
+-- Update game state to remove failed move
+resetMove :: GSt -> GSt
+resetMove gs = GSt { _field = gs ^. field,
+                     _seed = gs ^. seed,
+                     _history = gs ^. history,
+                     _toplay = gs ^. toplay,
+                     _looking = PlayerLook 0,
+                     _selcdidx  = Nothing,
+                     _selpileft = Nothing,
+                     _selpilefi = Nothing,
+                     _selpilett = Nothing,
+                     _selpileti = Nothing
+                   }
 
 -- Update game state for a card from player hand to center pile
 
