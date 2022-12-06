@@ -48,8 +48,8 @@ data Suit    = Spade | Heart | Club | Diamond
 
 instance Show Suit where
   show Spade   = [toEnum 0x2660] :: String -- unicode characters for suits
-  show Heart   = "♥️"--[toEnum 0x2665] :: String
-  show Diamond = "♦️"--[toEnum 0x2666] :: String 
+  show Heart   = [toEnum 0x2661] :: String
+  show Diamond = [toEnum 0x25C7] :: String 
   show Club    = [toEnum 0x2663] :: String
 
 -- Data type for Card. Contains 2 attributes rank and suit.
