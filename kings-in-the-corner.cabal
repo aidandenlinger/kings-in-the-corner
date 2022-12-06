@@ -37,7 +37,8 @@ library
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
+      QuickCheck
+    , base >=4.7 && <5
     , brick
     , ilist
     , microlens
@@ -75,4 +76,8 @@ test-suite kings-in-the-corner-test
     , base >=4.7 && <5
     , hspec
     , kings-in-the-corner
+    , microlens
+    , microlens-platform
+    , microlens-th
+    , random
   default-language: Haskell2010

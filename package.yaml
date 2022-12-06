@@ -37,6 +37,7 @@ library:
   source-dirs: src
   dependencies:
   - brick
+  - QuickCheck
   - microlens-platform
   - microlens-th
   - microlens
@@ -70,3 +71,7 @@ tests:
     - kings-in-the-corner
     - hspec
     - QuickCheck
+    - random
+    - microlens-platform
+    - microlens-th
+    - microlens
