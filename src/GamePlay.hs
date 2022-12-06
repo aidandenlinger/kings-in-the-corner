@@ -5,7 +5,8 @@ module GamePlay
     makeMove,
     getScore,
     resetMove,
-    nextPlayer
+    nextPlayer,
+    isNextCard
   ) where
 
 import Data.Maybe (isJust, fromMaybe)
@@ -133,12 +134,12 @@ canMove gameState move
 
 -- Updates the toplay index and draws a card for the next player.
 nextPlayer :: GSt -> GSt
-nextPlayer gs = updateToPlay nextPlayer gsAfterDraw 
+nextPlayer gs = updateToPlay nxtPlayer gsAfterDraw 
   where
-    nextPlayer = (getCurrP gs + 1) `mod` length (getPHands gs) 
-    gsForDraw = updateSelPileType True (Just DrawP) $
+    nxtPlayer   = (getCurrP gs + 1) `mod` length (getPHands gs) 
+    gsForDraw   = updateSelPileType True (Just DrawP) $
                  updateSelPileType False (Just PlayerP) $
-                 updateSelPileIdx False (Just nextPlayer) gs
+                 updateSelPileIdx False (Just nxtPlayer) gs
     gsAfterDraw = makeMove gsForDraw (getMoveFromState gsForDraw)
 
 
