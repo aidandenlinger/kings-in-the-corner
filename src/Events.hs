@@ -27,7 +27,11 @@ handleEvent :: GameState -> BrickEvent n e -> EventM n (Next GameState)
 handleEvent gs = case gs ^. screen of
   Welcome -> handleWelcome gs
   Game -> handleGame gs
-  PopUp -> undefined
+  PopUp _ -> handlePopUp gs
+
+handlePopUp :: GameState -> BrickEvent n e -> EventM n (Next GameState)
+handlePopUp gs (VtyEvent (EvKey KEnter _)) = continue $ gs & screen .~ Game
+handlePopUp gs _ = continue gs
 
 handleWelcome :: GameState -> BrickEvent n e -> EventM n (Next GameState)
 handleWelcome gs (VtyEvent (EvKey KEnter _)) = continue $ gs & screen .~ Game
@@ -43,8 +47,9 @@ handleGame gs (VtyEvent (EvKey KLeft _)) =
 -- or trying to make a move
 handleGame gs (VtyEvent (EvKey KEnter _)) = case gs ^. selpileft of
   Nothing -> continue $ makeSelection gs -- there is no selection, make first selection
-  -- TODO: error popup when move is invalid to let user know
-  Just _ -> if canMove newGS move then continue $ makeMove newGS move else continue $ resetMove gs
+  Just _ -> if canMove newGS move
+            then continue $ makeMove newGS move
+            else continue $ resetMove gs -- creates popup
     where
       move = getMoveFromState newGS
       newGS = makeSecondSelection gs -- we have already made a selection, this one is our move

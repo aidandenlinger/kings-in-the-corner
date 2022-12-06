@@ -133,13 +133,14 @@ canMove gameState move
 
 -- Updates the toplay index and draws a card for the next player.
 nextPlayer :: GSt -> GSt
-nextPlayer gs = updateToPlay nextPlayer gsAfterDraw 
+nextPlayer gs = nextPPopup $ updateToPlay nextP gsAfterDraw
   where
-    nextPlayer = (getCurrP gs + 1) `mod` length (getPHands gs) 
+    nextP = (getCurrP gs + 1) `mod` length (getPHands gs) 
     gsForDraw = updateSelPileType True (Just DrawP) $
                  updateSelPileType False (Just PlayerP) $
-                 updateSelPileIdx False (Just nextPlayer) gs
+                 updateSelPileIdx False (Just nextP) gs
     gsAfterDraw = makeMove gsForDraw (getMoveFromState gsForDraw)
+    nextPPopup gst = gst & screen .~ PopUp ("Next player: " ++ show nextP)
 
 
 -- Helper functions to execute move
@@ -202,7 +203,7 @@ resetMove gs = GSt { _field = gs ^. field,
                      _selpilefi = Nothing,
                      _selpilett = Nothing,
                      _selpileti = Nothing,
-                     _screen   = gs ^. screen,
+                     _screen   = PopUp "Invalid move!",
                      _keyHelp = gs ^. keyHelp
                    }
 

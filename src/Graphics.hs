@@ -210,6 +210,7 @@ keyHelpSidebar gs =
 startScreen :: GameState -> Widget ()
 startScreen gs
   | gs ^. screen == Welcome = 
+    center $
     joinBorders $
     withBorderStyle BS.unicode $
     borderWithLabel (str "Kings in the Corner") $
@@ -217,6 +218,11 @@ startScreen gs
     vBorder <+> 
     center (translateBy (Location(9, 0)) (cardWidget "♥️") <=> ((padLeftRight 4 (cardWidget "K♠")) <+> cardWidget "K♣︎") <=> (translateBy (Location(9, 0)) (cardWidget "♦️")) <=>  (translateBy (Location(3,0))  (padTopBottom 5 (str "Kings in the Corner")) <=>  (str "Press Enter to begin playing")) )  )
   | otherwise = emptyWidget
+  
+popUp :: GameState -> Widget ()
+popUp gs = case gs ^. screen of
+  PopUp msg -> center $ border $ setAvailableSize (20, 80) $ strWrap $ msg ++ "\nPress Enter to continue"
+  _notPopup -> emptyWidget
 
 --- GAME START
 
@@ -225,7 +231,7 @@ gameStart = do
   let app =
         App
           { -- given a state, return list of widgets to draw.
-            appDraw = \s -> [startScreen s, keyHelpSidebar s, draw s],
+            appDraw = \s -> [popUp s, startScreen s, keyHelpSidebar s, draw s],
             -- given state and an event, describe how to change state. the app
             -- is then redrawn
             appHandleEvent = handleEvent, -- in Event.hs

@@ -104,7 +104,7 @@ data Field = Field { _drawPile    :: Pile
 
 data Look = PlayerLook Int | PileLook Int deriving (Eq, Show)
 
-data Screen = Welcome | Game | PopUp deriving (Eq, Show)
+data Screen = Welcome | Game | PopUp String deriving (Eq, Show)
 
 -- Gamestate data type recording game history and current play situation
 
