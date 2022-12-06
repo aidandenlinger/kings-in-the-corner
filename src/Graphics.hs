@@ -200,8 +200,8 @@ isSelected = withAttr (attrName "selected_card")
 placeCard :: Widget n -> Widget n
 placeCard = withAttr (attrName "place_card")
 
-keyHelpScreen :: GameState -> Widget ()
-keyHelpScreen gs =
+keyHelpSidebar :: GameState -> Widget ()
+keyHelpSidebar gs =
     translateBy (Location(gs ^. keyHelp)) $
     withBorderStyle BS.unicode . border $
     setAvailableSize (20, 45) $
@@ -224,7 +224,7 @@ gameStart = do
   let app =
         App
           { -- given a state, return list of widgets to draw.
-            appDraw = \s -> [startScreen s, keyHelpScreen s, draw s],
+            appDraw = \s -> [startScreen s, keyHelpSidebar s, draw s],
             -- given state and an event, describe how to change state. the app
             -- is then redrawn
             appHandleEvent = handleEvent, -- in Event.hs

@@ -53,8 +53,16 @@ handleEvent gs (VtyEvent (EvKey (KChar 'n') _)) = continue $ nextPlayer gs
 
 --make welcome screen disappear
 handleEvent gs (VtyEvent (EvKey (KChar ' ') _)) =
-  continue (gs & welcome .~ (50, 50))
+  continue (gs & welcome .~ (90, 90))
+
+-- 'q' toggles keyHelp
+handleEvent gs (VtyEvent (EvKey (KChar 'q') _)) =
+  toggleHelp gs (gs ^. keyHelp)
 
 handleEvent s (VtyEvent (EvKey KEsc [])) = halt s
 -- Everything else does not change state
 handleEvent s _ = continue s
+
+toggleHelp :: GameState -> (Int, Int) -> EventM n (Next GameState)
+toggleHelp gs (0, 0)  = continue (gs & keyHelp .~ (80, 80))
+toggleHelp gs (80, 80) = continue (gs & keyHelp .~ (0, 0))
