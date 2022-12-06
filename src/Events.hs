@@ -51,7 +51,10 @@ handleEvent gs (VtyEvent (EvKey KDown _))
 -- n goes to Next player
 handleEvent gs (VtyEvent (EvKey (KChar 'n') _)) = continue $ nextPlayer gs
 
--- Esc quits game
+--make welcome screen disappear
+handleEvent gs (VtyEvent (EvKey (KChar ' ') _)) =
+  continue (gs & welcome .~ (50, 50))
+
 handleEvent s (VtyEvent (EvKey KEsc [])) = halt s
 -- Everything else does not change state
 handleEvent s _ = continue s
