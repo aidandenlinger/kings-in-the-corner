@@ -7,6 +7,7 @@ module CardTypes
   , FaceDir(..)
   , Field(..)
   , Look(..)
+  , Screen(..)
   , GSt(..)
   , Pile(..)
   , PileType(..)
@@ -103,6 +104,8 @@ data Field = Field { _drawPile    :: Pile
 
 data Look = PlayerLook Int | PileLook Int deriving (Eq, Show)
 
+data Screen = Welcome | Game | PopUp deriving (Eq, Show)
+
 -- Gamestate data type recording game history and current play situation
 
 data GSt = GSt { _field     :: Field            -- Current state of decks
@@ -115,7 +118,7 @@ data GSt = GSt { _field     :: Field            -- Current state of decks
                , _selcdidx  :: Maybe Int        -- Card idx from the from pile if selected
                , _selpilett :: Maybe PileType   -- Pile type of the to pile if selected
                , _selpileti :: Maybe Int        -- Pile idx of the to pile if selected
-               , _welcome :: (Int, Int)         -- If welcome scren
+               , _screen :: Screen              -- What screen we are displaying right now
                , _keyHelp :: (Int, Int)         -- KeyHelp 
                } deriving (Show)
 

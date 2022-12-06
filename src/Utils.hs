@@ -280,7 +280,7 @@ initGSt nPlayers seedval = GSt { _field     = fieldval,
                                  _selpilefi = Nothing,
                                  _selpilett = Nothing,
                                  _selpileti = Nothing,
-                                 _welcome = (0, 0),
+                                 _screen = Welcome,
                                  _keyHelp = (0, 0)
                                }
   where

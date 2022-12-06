@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Events
-  ( handleEvent,
+  ( handleEvent
   )
 where
 
@@ -24,14 +24,24 @@ makeLenses ''Field
 makeLenses ''GSt
 
 handleEvent :: GameState -> BrickEvent n e -> EventM n (Next GameState)
+handleEvent gs = case gs ^. screen of
+  Welcome -> handleWelcome gs
+  Game -> handleGame gs
+  PopUp -> undefined
+
+handleWelcome :: GameState -> BrickEvent n e -> EventM n (Next GameState)
+handleWelcome gs (VtyEvent (EvKey KEnter _)) = continue $ gs & screen .~ Game
+handleWelcome gs _ = continue gs
+
+handleGame :: GameState -> BrickEvent n e -> EventM n (Next GameState)
 -- Left and Right move between player cards
-handleEvent gs (VtyEvent (EvKey KRight _)) =
+handleGame gs (VtyEvent (EvKey KRight _)) =
   continue $ incLook gs
-handleEvent gs (VtyEvent (EvKey KLeft _)) =
+handleGame gs (VtyEvent (EvKey KLeft _)) =
   continue $ decLook gs
 -- Enter is our generic enter key. We are either making our first selection
 -- or trying to make a move
-handleEvent gs (VtyEvent (EvKey KEnter _)) = case gs ^. selpileft of
+handleGame gs (VtyEvent (EvKey KEnter _)) = case gs ^. selpileft of
   Nothing -> continue $ makeSelection gs -- there is no selection, make first selection
   -- TODO: error popup when move is invalid to let user know
   Just _ -> if canMove newGS move then continue $ makeMove newGS move else continue $ resetMove gs
@@ -40,28 +50,24 @@ handleEvent gs (VtyEvent (EvKey KEnter _)) = case gs ^. selpileft of
       newGS = makeSecondSelection gs -- we have already made a selection, this one is our move
 
 -- Up and Down move between decks
-handleEvent gs (VtyEvent (EvKey KUp _))
+handleGame gs (VtyEvent (EvKey KUp _))
   | not $ haveSelection gs = case gs ^. looking of
       PlayerLook _ -> continue $ setLook (PileLook 0) gs
       _ -> continue gs
-handleEvent gs (VtyEvent (EvKey KDown _))
+handleGame gs (VtyEvent (EvKey KDown _))
   | not $ haveSelection gs = case gs ^. looking of
       PileLook _ -> continue $ setLook (PlayerLook 0) gs
       _ -> continue gs
 -- n goes to Next player
-handleEvent gs (VtyEvent (EvKey (KChar 'n') _)) = continue $ nextPlayer gs
-
---make welcome screen disappear
-handleEvent gs (VtyEvent (EvKey (KChar ' ') _)) =
-  continue (gs & welcome .~ (90, 90))
+handleGame gs (VtyEvent (EvKey (KChar 'n') _)) = continue $ nextPlayer gs
 
 -- 'q' toggles keyHelp
-handleEvent gs (VtyEvent (EvKey (KChar 'q') _)) =
+handleGame gs (VtyEvent (EvKey (KChar 'q') _)) =
   toggleHelp gs (gs ^. keyHelp)
 
-handleEvent s (VtyEvent (EvKey KEsc [])) = halt s
+handleGame s (VtyEvent (EvKey KEsc [])) = halt s
 -- Everything else does not change state
-handleEvent s _ = continue s
+handleGame s _ = continue s
 
 toggleHelp :: GameState -> (Int, Int) -> EventM n (Next GameState)
 toggleHelp gs (0, 0)  = continue (gs & keyHelp .~ (80, 80))
