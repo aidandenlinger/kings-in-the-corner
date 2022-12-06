@@ -48,8 +48,8 @@ data Suit    = Spade | Heart | Club | Diamond
 
 instance Show Suit where
   show Spade   = [toEnum 0x2660] :: String -- unicode characters for suits
-  show Heart   = [toEnum 0x2665] :: String
-  show Diamond = [toEnum 0x2666] :: String 
+  show Heart   = "♥️"--[toEnum 0x2665] :: String
+  show Diamond = "♦️"--[toEnum 0x2666] :: String 
   show Club    = [toEnum 0x2663] :: String
 
 -- Data type for Card. Contains 2 attributes rank and suit.
@@ -115,6 +115,8 @@ data GSt = GSt { _field     :: Field            -- Current state of decks
                , _selcdidx  :: Maybe Int        -- Card idx from the from pile if selected
                , _selpilett :: Maybe PileType   -- Pile type of the to pile if selected
                , _selpileti :: Maybe Int        -- Pile idx of the to pile if selected
+               , _welcome :: (Int, Int)         -- If welcome scren
+               , _keyHelp :: (Int, Int)         -- KeyHelp 
                } deriving (Show)
 
 -- DISPLAY TYPES ---------------------------------------------------------------

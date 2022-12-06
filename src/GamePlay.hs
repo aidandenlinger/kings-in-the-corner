@@ -162,7 +162,9 @@ makeDrawMove iGameState pIdx = GSt { _field     = newfield,
                                      _selpileft = Nothing,
                                      _selpilefi = Nothing,
                                      _selpilett = Nothing,
-                                     _selpileti = Nothing
+                                     _selpileti = Nothing,
+                                     _welcome   = iGameState ^. welcome,
+                                     _keyHelp = iGameState ^. keyHelp
                                      }
     where
         toplayidx   = iGameState ^. toplay
@@ -214,7 +216,9 @@ makeP2CenMove iGameState pIdx cdIdx cIdx = GSt { _field     = newfield,
                                                  _selpileft = Nothing,
                                                  _selpilefi = Nothing,
                                                  _selpilett = Nothing,
-                                                 _selpileti = Nothing
+                                                 _selpileti = Nothing,
+                                                 _welcome   = iGameState ^. welcome,
+                                                 _keyHelp = iGameState ^. keyHelp
                                                  }
     where
         toplayidx   = iGameState ^. toplay
@@ -252,7 +256,9 @@ makeP2CorMove iGameState pIdx cdIdx cIdx = GSt { _field     = newfield,
                                                  _selpileft = Nothing,
                                                  _selpilefi = Nothing,
                                                  _selpilett = Nothing,
-                                                 _selpileti = Nothing
+                                                 _selpileti = Nothing,
+                                                 _welcome   = iGameState ^. welcome,
+                                                 _keyHelp = iGameState ^. keyHelp
                                                  }
     where
         toplayidx   = iGameState ^. toplay
@@ -290,7 +296,9 @@ makeCen2CenMove iGameState cIdxf cIdxt  = GSt { _field     = newfield,
                                                 _selpileft = Nothing,
                                                 _selpilefi = Nothing,
                                                 _selpilett = Nothing,
-                                                _selpileti = Nothing
+                                                _selpileti = Nothing,
+                                                _welcome   = iGameState ^. welcome,
+                                                _keyHelp = iGameState ^. keyHelp
                                                 }
     where
         toplayidx   = iGameState ^. toplay
@@ -329,7 +337,9 @@ makeCen2CorMove iGameState cIdxf cIdxt  = GSt { _field     = newfield,
                                                 _selpileft = Nothing,
                                                 _selpilefi = Nothing,
                                                 _selpilett = Nothing,
-                                                _selpileti = Nothing
+                                                _selpileti = Nothing,
+                                                _welcome   = iGameState ^. welcome,
+                                                _keyHelp = iGameState ^. keyHelp
                                                 }
     where
         toplayidx   = iGameState ^. toplay
