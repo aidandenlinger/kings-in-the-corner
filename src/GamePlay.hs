@@ -202,7 +202,9 @@ resetMove gs = GSt { _field = gs ^. field,
                      _selpileft = Nothing,
                      _selpilefi = Nothing,
                      _selpilett = Nothing,
-                     _selpileti = Nothing
+                     _selpileti = Nothing,
+                     _welcome   = gs ^. welcome,
+                     _keyHelp = gs ^. keyHelp
                    }
 
 -- Update game state for a card from player hand to center pile
