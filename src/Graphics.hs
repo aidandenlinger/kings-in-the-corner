@@ -188,7 +188,7 @@ italicStyle = withBorderStyle custom . border
 attrs :: [(AttrName, Attr)]
 attrs = [(attrName "viewed_card", bg blue),
          (attrName "selected_card", bg green),
-         (attrName "place_card", fg green)]
+         (attrName "selected_text", fg blue)]
 
 -- marks a card as selected
 isViewed :: Widget n -> Widget n
@@ -198,8 +198,8 @@ isSelected :: Widget n -> Widget n
 isSelected = withAttr (attrName "selected_card")
 
 -- where to place card
-placeCard :: Widget n -> Widget n
-placeCard = withAttr (attrName "place_card")
+isSelectedText :: Widget n -> Widget n
+isSelectedText = withAttr (attrName "selected_text")
 
 keyHelpSidebar :: GameState -> Widget ()
 keyHelpSidebar gs =
@@ -210,16 +210,26 @@ keyHelpSidebar gs =
     <=> (withBorderStyle BS.unicode . border $ setAvailableSize (20, 45) $ strWrap ("Helpful Hint: Place alternating black and red cards on piles in descending order and press 'n' to complete turn!"))
 
 startScreen :: GameState -> Widget ()
-startScreen gs
-  | gs ^. screen == Welcome = 
+startScreen gs = case gs ^. screen of
+  w@Welcome {} -> genWelcome w
+  _nonWelcome -> emptyWidget
+  where
+  genWelcome (Welcome sel numPlayers numAI diff) =
     center $
     joinBorders $
     withBorderStyle BS.unicode $
     borderWithLabel (str "Kings in the Corner") $
-    ( ( center (str "How to play Kings in the Corner:\n") <=> (strWrap "Object of the Game: Players try to get rid of their cards by playing alternate red and black cards in descending order.\n\nThe Deal: Deal seven cards to each player. Place the remaining cards in the middle of the table as a stockpile. Then turn the four top cards over, placing one to the north, south, east, and west. These will be the foundation piles.\n\nThe Play: The player to the left of the dealer begins by drawing one card from the center stockpile. The player may make as many valid plays as are possible during their turn to get rid of as many cards as possible from their hand. Once there are no more valid moves, it’s the next player’s turn. Each player begins their turn by drawing a card from the center stockpile and making as many valid moves as they can.\n\nValid Moves: Play a card (or sequence of cards) on a foundation pile. To play cards on a foundation pile, the card played must be immediately below the foundation card in rank and of the opposite color (red or black). For example, if a 9♥ is on the foundation pile, then the next card face played must be 8♣ or 8♠. A sequence of cards may also be played, but all the cards in the sequence must obey the lower rank and opposite color rules. Aces are always the lowest cards.\n\nPlay a “King in the corner”: Kings are the only cards that can be played in the corner spaces. Once a King is played, players may then lay off cards on that pile like any other foundation pile. Move an entire foundation pile onto another pile, if the bottom card of that recipient pile and the top card of the moving pile creates a valid sequence. Play any card or sequence of cards on a vacated foundation pile.\n\nHow to Win: The first player to lay off all of their cards wins.\n\n")) <+>
-    vBorder <+> 
-    center (translateBy (Location(9, 0)) (cardWidget "♥️") <=> ((padLeftRight 4 (cardWidget "K♠")) <+> cardWidget "K♣︎") <=> (translateBy (Location(9, 0)) (cardWidget "♦️")) <=>  (translateBy (Location(3,0))  (padTopBottom 5 (str "Kings in the Corner")) <=>  (str "Press Enter to begin playing")) )  )
-  | otherwise = emptyWidget
+    ( (center (str "How to play Kings in the Corner:\n") <=> (strWrap "Object of the Game: Players try to get rid of their cards by playing alternate red and black cards in descending order.\n\nThe Deal: Deal seven cards to each player. Place the remaining cards in the middle of the table as a stockpile. Then turn the four top cards over, placing one to the north, south, east, and west. These will be the foundation piles.\n\nThe Play: The player to the left of the dealer begins by drawing one card from the center stockpile. The player may make as many valid plays as are possible during their turn to get rid of as many cards as possible from their hand. Once there are no more valid moves, it’s the next player’s turn. Each player begins their turn by drawing a card from the center stockpile and making as many valid moves as they can.\n\nValid Moves: Play a card (or sequence of cards) on a foundation pile. To play cards on a foundation pile, the card played must be immediately below the foundation card in rank and of the opposite color (red or black). For example, if a 9♥ is on the foundation pile, then the next card face played must be 8♣ or 8♠. A sequence of cards may also be played, but all the cards in the sequence must obey the lower rank and opposite color rules. Aces are always the lowest cards.\n\nPlay a “King in the corner”: Kings are the only cards that can be played in the corner spaces. Once a King is played, players may then lay off cards on that pile like any other foundation pile. Move an entire foundation pile onto another pile, if the bottom card of that recipient pile and the top card of the moving pile creates a valid sequence. Play any card or sequence of cards on a vacated foundation pile.\n\nHow to Win: The first player to lay off all of their cards wins.\n\n"))
+    <+> vBorder <+> 
+     center (translateBy (Location(9, 0)) (cardWidget "K♥") <=> ((padLeftRight 4 (cardWidget "K♠")) <+> cardWidget "K♣") <=> (translateBy (Location(9, 0)) (cardWidget "K♦")) <=>  (str "Kings in the Corner") <=> selectionList <=> (str "Press Enter to begin playing")) )
+      where
+        selectionList = padTopBottom 5 $ vBox $ modifyAt (selToIndex sel) isSelectedText [str "Use up and down arrow keys to switch rows,\nleft and right arrow keys to change values", str $ "Number of players: " ++ show (numPlayers + 1), str $ "Number of AI opponents: " ++ show numAI, str $ "AI difficulty: " ++ show diff]
+        
+        selToIndex :: WelcomeSelect -> Int
+        selToIndex NumPlayers = 1
+        selToIndex AIPlayers  = 2
+        selToIndex Difficulty = 3
+  genWelcome _ = undefined
   
 popUp :: GameState -> Widget ()
 popUp gs = case gs ^. screen of
@@ -245,10 +255,9 @@ gameStart = do
             -- don't show cursor
             appChooseCursor = neverShowCursor
           }
-  -- Start a two player game from a random generator
-  finalState <- defaultMain app . initGSt 2 1 <$> initStdGen
-  final <- finalState -- need to access the gamestate,
-                      -- otherwise haskell will be lazy
-                      -- and not run the game at all :)
+  -- Start the app. Note that initGSt will be called again to create
+  -- a whole new GSt once the number of players has been selected
+  -- on the main screen
+  finalState <- defaultMain app welcomeGSt
   -- exit once done, don't check anything
   exitSuccess
