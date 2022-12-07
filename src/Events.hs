@@ -111,7 +111,7 @@ handleGame gs (VtyEvent (EvKey KDown _))
 -- n goes to Next player, also handles AI case
 handleGame gs (VtyEvent (EvKey (KChar 'n') _)) = case nextPlayerType of
   Human -> continue $ nextGS & screen .~ PopUp ("Next player: " ++ show (nextPlayerIdx + 1))
-  AI -> suspendAndResume $ finalAIState gs
+  AI -> suspendAndResume $ finalAIState nextGS
   where
     nextGS = nextPlayer gs
     nextPlayerType = ((nextGS ^. players) !! nextPlayerIdx) ^. ptype
