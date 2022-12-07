@@ -169,7 +169,7 @@ nextPlayer gs = updateToPlay nextP gsAfterDraw
 winPopUp :: GSt -> GSt
 winPopUp gs = gs & screen .~ PopUp winmsg
     where
-        winmsg = "Game Over!\nLow points is better! Esc to quit\n" ++ unlines (zipWith (\p c -> "Player " ++ show p ++ ": " ++ show (getScore c) ++ " points") [1..] (map (^. cards) (getPHands gs)))
+        winmsg = "Game Over!\nLow points is better! Esc to quit\n" ++ unlines (zipWith (\p c -> "Player " ++ show p ++ " (" ++ show (((gs ^. players) !! (p - 1)) ^. ptype) ++ ") : " ++ show (getScore c) ++ " points") [1..] (map (^. cards) (getPHands gs)))
 
 -- Helper functions to execute move
 
