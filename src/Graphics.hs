@@ -223,7 +223,7 @@ startScreen gs = case gs ^. screen of
     <+> vBorder <+> 
      center (translateBy (Location(9, 0)) (cardWidget "K♥") <=> ((padLeftRight 4 (cardWidget "K♠")) <+> cardWidget "K♣") <=> (translateBy (Location(9, 0)) (cardWidget "K♦")) <=>  (str "Kings in the Corner") <=> selectionList <=> (str "Press Enter to begin playing")) )
       where
-        selectionList = padTopBottom 5 $ vBox $ modifyAt (selToIndex sel) isSelectedText [str "Use up and down arrow keys to switch rows,\nleft and right arrow keys to change values", str $ "Number of players: " ++ show (numPlayers + 1), str $ "Number of AI opponents: " ++ show numAI, str $ "AI difficulty: " ++ show diff]
+        selectionList = padTopBottom 5 $ vBox $ modifyAt (selToIndex sel) isSelectedText [str "Use up and down arrow keys to switch rows,\nleft and right arrow keys to change values", str $ "Number of players: " ++ show (numPlayers + 1), str $ "Number of AI opponents: " ++ show numAI, str $ "AI difficulty (0 easy, 2 hard): " ++ show diff]
         
         selToIndex :: WelcomeSelect -> Int
         selToIndex NumPlayers = 1
@@ -233,7 +233,7 @@ startScreen gs = case gs ^. screen of
   
 popUp :: GameState -> Widget ()
 popUp gs = case gs ^. screen of
-  PopUp msg -> center $ border $ setAvailableSize (20, 80) $ strWrap $ msg ++ "\nPress Enter to continue"
+  PopUp msg -> center $ border $ setAvailableSize (40, 80) $ strWrap $ msg ++ "\nPress Enter to continue"
   _notPopup -> emptyWidget
 
 --- GAME START

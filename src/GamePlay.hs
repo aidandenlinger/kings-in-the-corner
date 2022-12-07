@@ -6,6 +6,7 @@ module GamePlay
     getScore,
     resetMove,
     nextPlayer,
+    winPopUp,
     isNextCard,
     getAIMove,
     getCardMoves,
@@ -150,6 +151,10 @@ nextPlayer gs = updateToPlay nextP gsAfterDraw
                 updateSelPileIdx False (Just nextP) gs
     gsAfterDraw = makeMove gsForDraw (getMoveFromState gsForDraw)
 
+winPopUp :: GSt -> GSt
+winPopUp gs = gs & screen .~ PopUp winmsg
+    where
+        winmsg = "Game Over!\nLow points is better! Esc to quit\n" ++ unlines (zipWith (\p c -> "Player " ++ show p ++ ": " ++ show (getScore c) ++ " points") [1..] (map (^. cards) (getPHands gs)))
 
 -- Helper functions to execute move
 
