@@ -11,7 +11,8 @@ module GamePlay
     getAIMove,
     getCardMoves,
     getPileMoves,
-    selFromMoves
+    selFromMoves,
+    initGStP1Draw
   ) where
 
 import Data.Maybe (isJust, fromMaybe)
@@ -22,6 +23,7 @@ import Prelude
 
 import CardTypes
 import Utils
+import qualified System.Random as R
 
 -------------------------------------------------------------------------------
 -- Convert data types from CardTypes to Lenses for easy access
@@ -140,6 +142,16 @@ canMove gameState move
         fpileidx        = fromMaybe topOfPileIdx (move ^. fPileIdx)
         tpileidx        = fromMaybe topOfPileIdx (move ^. tPileIdx)
         isdrawnotempty  = not (null (gameState ^. field . drawPile . cards))
+
+-- init a game state and make a draw for P1
+initGStP1Draw :: Int -> Int -> R.StdGen -> GSt
+initGStP1Draw nPlayers nAI seedval = newAfterP1Draw
+  where
+    newAfterP1Draw = makeMove newForDraw (getMoveFromState newForDraw)
+    newForDraw =  updateSelPileType True (Just DrawP) $
+                  updateSelPileType False (Just PlayerP) $
+                  updateSelPileIdx False (Just 0) new
+    new = initGSt nPlayers nAI seedval
 
 -- Updates the toplay index and draws a card for the next player.
 nextPlayer :: GSt -> GSt
