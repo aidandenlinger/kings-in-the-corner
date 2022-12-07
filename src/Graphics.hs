@@ -203,10 +203,11 @@ placeCard = withAttr (attrName "place_card")
 
 keyHelpSidebar :: GameState -> Widget ()
 keyHelpSidebar gs =
-    translateBy (Location(gs ^. keyHelp)) $
+    (translateBy (Location(gs ^. keyHelp)) $
     withBorderStyle BS.unicode . border $
     setAvailableSize (20, 45) $
-    strWrap "Press UP arrow to select piles, DOWN to return to hand\n\nPress L/R arrows to select\n\nPress enter to make a selection\n\nPress 'n' to end your turn\n\nPress 'q' to close help"
+    strWrap "Press UP arrow to select piles, DOWN to return to hand\n\nPress L/R arrows to select\n\nPress enter to make a selection\n\nPress 'n' to end your turn\n\nPress 'q' to close help")
+    <=> (withBorderStyle BS.unicode . border $ setAvailableSize (20, 45) $ strWrap ("Helpful Hint: Place alternating black and red cards on piles in descending order and press 'n' to complete turn!"))
 
 startScreen :: GameState -> Widget ()
 startScreen gs =
