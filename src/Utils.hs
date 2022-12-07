@@ -302,20 +302,21 @@ welcomeGSt = initGSt 2 1 (mkStdGen 0) & screen .~ Welcome NumPlayers 1 1 0
 -- take a random generator and initialize a game state
 
 initGSt :: Int -> Int -> R.StdGen -> GSt
+-- do a draw for player one
 initGSt nPlayers nAI seedval = GSt { _field     = fieldval,
-                                     _seed      = seedval,
-                                     _history   = [],
-                                     _toplay    = 0,
-                                     _looking   = PlayerLook 0,
-                                     _selcdidx  = Nothing,
-                                     _selpileft = Nothing,
-                                     _selpilefi = Nothing,
-                                     _selpilett = Nothing,
-                                     _selpileti = Nothing,
-                                     _screen = Game,
-                                     _keyHelp = (0, 0),
-                                     _players = playersval
-                               }
+                                       _seed      = seedval,
+                                       _history   = [],
+                                       _toplay    = 0,
+                                       _looking   = PlayerLook 0,
+                                       _selcdidx  = Nothing,
+                                       _selpileft = Nothing,
+                                       _selpilefi = Nothing,
+                                       _selpilett = Nothing,
+                                       _selpileti = Nothing,
+                                       _screen = Game,
+                                       _keyHelp = (0, 0),
+                                       _players = playersval
+                                 }
   where
     deal      = R.shuffle' initialDeal 52 seedval -- Shuffle the initial deal
     fieldval  = Field { _drawPile = drawval,

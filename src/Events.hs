@@ -35,9 +35,11 @@ handleEvent gs = case gs ^. screen of
 
 handlePopUp :: GameState -> BrickEvent n e -> EventM n (Next GameState)
 handlePopUp gs (VtyEvent (EvKey KEnter _)) = continue $ gs & screen .~ Game
+handlePopUp s (VtyEvent (EvKey KEsc [])) = halt s
 handlePopUp gs _ = continue gs
 
 handleWelcome :: GameState -> BrickEvent n e -> EventM n (Next GameState)
+handleWelcome s (VtyEvent (EvKey KEsc [])) = halt s
 -- up and down to move between menu
 handleWelcome gs (VtyEvent (EvKey KUp _)) = continue $ gs & screen .~ Welcome (idxToWelcomeScreen ((welcomeScreenToIdx sel - 1 ) `mod` 3)) num1 num2 num3
   where
@@ -59,7 +61,7 @@ handleWelcome gs (VtyEvent (EvKey KLeft _)) = case sel of
   where
     Welcome sel numPlayer numAI diff = gs ^. screen
 handleWelcome gs (VtyEvent (EvKey KEnter _)) = suspendAndResume $ do
-  newGs <- initGSt (numPlayer + 1) (min numPlayer numAI) <$> initStdGen
+  newGs <- initGStP1Draw (numPlayer + 1) (min numPlayer numAI) <$> initStdGen
   return $ setDifficulty diff newGs
   where
     Welcome sel numPlayer numAI diff = gs ^. screen

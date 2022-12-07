@@ -54,9 +54,9 @@ type GameState = GSt
 draw :: GameState -> Widget ()
 draw gs = vBox [topPiles, playerHand, currentPlayer]
   where
-    topPiles = createTopPiles (gs ^. looking) (gs ^. selpileft, gs ^. selpilefi) (getPiles gs)
+    topPiles = createTopPiles (gs ^. looking) (gs ^. selpileft, gs ^. selpilefi) (length (gs ^. field . drawPile . cards)) (getPiles gs)
     playerHand = createPlayerHand (gs ^. looking) (gs ^. selpileft, gs ^. selcdidx) (getCurrPCards gs)
-    currentPlayer = withBorderStyle BS.unicode . border $ hCenter $ str $ "Player " ++ show ((getCurrP gs) + 1) ++ "'s turn"
+    currentPlayer = withBorderStyle BS.unicode . border $ hCenter $ str $ "Player " ++ show (getCurrP gs + 1) ++ "'s turn"
     --currentPlayer = hCenter $ str $ "Currently playing: Player " ++ show (getCurrP gs) ++ " Selected: " ++ show (gs ^. selpileft, gs ^. selpilefi, gs ^. selcdidx) ++ " Looking: " ++ show (gs ^. looking)
 
 --- PILES
@@ -65,8 +65,8 @@ draw gs = vBox [topPiles, playerHand, currentPlayer]
 -- selected pile, return the widget for the piles of the board.
 -- This expects a list of four elements - top pile, right pile, bottom pile,
 -- left pile.
-createTopPiles :: Look -> (Maybe PileType, Maybe Int) -> [[Card]] -> Widget ()
-createTopPiles look selInfo piles =
+createTopPiles :: Look -> (Maybe PileType, Maybe Int) -> Int -> [[Card]] -> Widget ()
+createTopPiles look selInfo drawAmt piles =
   vBox $
     map
       ( padTopBottom pileVertPadding
@@ -85,7 +85,7 @@ createTopPiles look selInfo piles =
         map pileToOverlap piles
 
     -- created separately because we don't want to display what card draw is
-    drawWidget = drawSelect look selInfo (cardWidget "deck")
+    drawWidget = drawSelect look selInfo (cardWidget (" " ++ show drawAmt))
       where
         drawSelect (PileLook 4) _ = isViewed
         drawSelect _ (Just DrawP, Just 0) = isSelected -- error case, shouldn't be possible
