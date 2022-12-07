@@ -56,7 +56,8 @@ draw gs = vBox [topPiles, playerHand, currentPlayer]
   where
     topPiles = createTopPiles (gs ^. looking) (gs ^. selpileft, gs ^. selpilefi) (getPiles gs)
     playerHand = createPlayerHand (gs ^. looking) (gs ^. selpileft, gs ^. selcdidx) (getCurrPCards gs)
-    currentPlayer = hCenter $ str $ "Currently playing: Player " ++ show (getCurrP gs) ++ " Selected: " ++ show (gs ^. selpileft, gs ^. selpilefi, gs ^. selcdidx) ++ " Looking: " ++ show (gs ^. looking)
+    currentPlayer = withBorderStyle BS.unicode . border $ hCenter $ str $ "Player " ++ show ((getCurrP gs) + 1) ++ "'s turn"
+    --currentPlayer = hCenter $ str $ "Currently playing: Player " ++ show (getCurrP gs) ++ " Selected: " ++ show (gs ^. selpileft, gs ^. selpilefi, gs ^. selcdidx) ++ " Looking: " ++ show (gs ^. looking)
 
 --- PILES
 
@@ -202,20 +203,28 @@ placeCard = withAttr (attrName "place_card")
 
 keyHelpSidebar :: GameState -> Widget ()
 keyHelpSidebar gs =
-    translateBy (Location(gs ^. keyHelp)) $
+    (translateBy (Location(gs ^. keyHelp)) $
     withBorderStyle BS.unicode . border $
     setAvailableSize (20, 45) $
-    strWrap "Press UP arrow to select piles\n\nPress L/R arrows to select\n\nPress enter to make a selection\n\nPress 'q' to close help"
+    strWrap "Press UP arrow to select piles, DOWN to return to hand\n\nPress L/R arrows to select\n\nPress enter to make a selection\n\nPress 'n' to end your turn\n\nPress 'q' to close help")
+    <=> (withBorderStyle BS.unicode . border $ setAvailableSize (20, 45) $ strWrap ("Helpful Hint: Place alternating black and red cards on piles in descending order and press 'n' to complete turn!"))
 
 startScreen :: GameState -> Widget ()
-startScreen gs =
-    translateBy (Location(gs ^. welcome)) $
+startScreen gs
+  | gs ^. screen == Welcome = 
+    center $
     joinBorders $
     withBorderStyle BS.unicode $
     borderWithLabel (str "Kings in the Corner") $
-    ( ( center (str "How to play Kings in the Corner:\n") <=> (strWrap "Rank of Cards: K-Q-J-10-9-8-7-6-5-4-3-2-A (ace low)\n\nObject of the Game: Players try to get rid of their cards by playing them in a solitaire-like layout of eight piles, built of alternate red and black cards in descending order.\n\nThe Deal: Deal seven cards to each player. Place the remaining cards in the middle of the table as a stockpile. Then turn the four top cards over, placing one on each of the four sides of the deck — to the north, south, east, and west. These will be the foundation piles. The cards on the table should make the shape of a cross\n\nThe Play: The player to the left of the dealer begins by drawing one card from the center stockpile. The player may make as many valid plays as are possible during their turn to get rid of as many cards as possible from their hand. Once there are no more valid moves, it’s the next player’s turn. Each player begins their turn by drawing a card from the center stockpile and making as many valid moves as they can.\n\nValid Moves: Play a card (or sequence of cards) on a foundation pile in the cross. To play cards on a foundation pile, the card played must be immediately below the foundation card in rank and of the opposite color (red or black). For example, if a 9♥ is on the foundation pile, then the next card face played must be 8♣ or 8♠. A sequence of cards may also be played, but all the cards in the sequence must obey the lower rank and opposite color rules. Aces are always the lowest cards.\n\nPlay a “King in the corner”: Kings are the only cards that can be played in the corner spaces created by the cross. Once a King is played, players may then lay off cards on that pile like any other foundation pile. Move an entire foundation pile onto another pile, if the bottom card of that recipient pile and the top card of the moving pile creates a valid sequence. This is often possible when the cards are first dealt. Play any card or sequence of cards on a vacated foundation pile.\n\nHow to Keep Score: The first player to lay off all of their cards wins.\n\n")) <+> 
+    ( ( center (str "How to play Kings in the Corner:\n") <=> (strWrap "Object of the Game: Players try to get rid of their cards by playing alternate red and black cards in descending order.\n\nThe Deal: Deal seven cards to each player. Place the remaining cards in the middle of the table as a stockpile. Then turn the four top cards over, placing one to the north, south, east, and west. These will be the foundation piles.\n\nThe Play: The player to the left of the dealer begins by drawing one card from the center stockpile. The player may make as many valid plays as are possible during their turn to get rid of as many cards as possible from their hand. Once there are no more valid moves, it’s the next player’s turn. Each player begins their turn by drawing a card from the center stockpile and making as many valid moves as they can.\n\nValid Moves: Play a card (or sequence of cards) on a foundation pile. To play cards on a foundation pile, the card played must be immediately below the foundation card in rank and of the opposite color (red or black). For example, if a 9♥ is on the foundation pile, then the next card face played must be 8♣ or 8♠. A sequence of cards may also be played, but all the cards in the sequence must obey the lower rank and opposite color rules. Aces are always the lowest cards.\n\nPlay a “King in the corner”: Kings are the only cards that can be played in the corner spaces. Once a King is played, players may then lay off cards on that pile like any other foundation pile. Move an entire foundation pile onto another pile, if the bottom card of that recipient pile and the top card of the moving pile creates a valid sequence. Play any card or sequence of cards on a vacated foundation pile.\n\nHow to Win: The first player to lay off all of their cards wins.\n\n")) <+>
     vBorder <+> 
-    center (translateBy (Location(9, 0)) (cardWidget "♥️") <=> ((padLeftRight 4 (cardWidget "K♠")) <+> cardWidget "K♣︎") <=> (translateBy (Location(9, 0)) (cardWidget "♦️")) <=>  (translateBy (Location(3,0))  (padTopBottom 5 (str "Kings in the Corner")) <=>  (str "Press Spacebar to begin playing")) )  )
+    center (translateBy (Location(9, 0)) (cardWidget "♥️") <=> ((padLeftRight 4 (cardWidget "K♠")) <+> cardWidget "K♣︎") <=> (translateBy (Location(9, 0)) (cardWidget "♦️")) <=>  (translateBy (Location(3,0))  (padTopBottom 5 (str "Kings in the Corner")) <=>  (str "Press Enter to begin playing")) )  )
+  | otherwise = emptyWidget
+  
+popUp :: GameState -> Widget ()
+popUp gs = case gs ^. screen of
+  PopUp msg -> center $ border $ setAvailableSize (20, 80) $ strWrap $ msg ++ "\nPress Enter to continue"
+  _notPopup -> emptyWidget
 
 --- GAME START
 
@@ -224,7 +233,7 @@ gameStart = do
   let app =
         App
           { -- given a state, return list of widgets to draw.
-            appDraw = \s -> [startScreen s, keyHelpSidebar s, draw s],
+            appDraw = \s -> [popUp s, startScreen s, keyHelpSidebar s, draw s],
             -- given state and an event, describe how to change state. the app
             -- is then redrawn
             appHandleEvent = handleEvent, -- in Event.hs

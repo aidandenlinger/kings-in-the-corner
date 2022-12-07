@@ -142,13 +142,14 @@ canMove gameState move
 
 -- Updates the toplay index and draws a card for the next player.
 nextPlayer :: GSt -> GSt
-nextPlayer gs = updateToPlay nxtPlayer gsAfterDraw 
+nextPlayer gs = nextPPopup $ updateToPlay nextP gsAfterDraw
   where
-    nxtPlayer   = (getCurrP gs + 1) `mod` length (getPHands gs) 
-    gsForDraw   = updateSelPileType True (Just DrawP) $
-                 updateSelPileType False (Just PlayerP) $
-                 updateSelPileIdx False (Just nxtPlayer) gs
+    nextP = (getCurrP gs + 1) `mod` length (getPHands gs) 
+    gsForDraw = updateSelPileType True (Just DrawP) $
+                updateSelPileType False (Just PlayerP) $
+                updateSelPileIdx False (Just nextP) gs
     gsAfterDraw = makeMove gsForDraw (getMoveFromState gsForDraw)
+    nextPPopup gst = gst & screen .~ PopUp ("Next player: " ++ show nextP)
 
 
 -- Helper functions to execute move
@@ -172,7 +173,7 @@ makeDrawMove iGameState pIdx = GSt { _field     = newfield,
                                      _selpilefi = Nothing,
                                      _selpilett = Nothing,
                                      _selpileti = Nothing,
-                                     _welcome   = iGameState ^. welcome,
+                                     _screen   = iGameState ^. screen,
                                      _keyHelp = iGameState ^. keyHelp,
                                      _players = iGameState ^. players
                                      }
@@ -212,7 +213,7 @@ resetMove gs = GSt { _field = gs ^. field,
                      _selpilefi = Nothing,
                      _selpilett = Nothing,
                      _selpileti = Nothing,
-                     _welcome   = gs ^. welcome,
+                     _screen   = PopUp "Invalid move!",
                      _keyHelp = gs ^. keyHelp,
                      _players = gs ^. players
                    }
@@ -230,7 +231,7 @@ makeP2CenMove iGameState pIdx cdIdx cIdx = GSt { _field     = newfield,
                                                  _selpilefi = Nothing,
                                                  _selpilett = Nothing,
                                                  _selpileti = Nothing,
-                                                 _welcome   = iGameState ^. welcome,
+                                                 _screen   = iGameState ^. screen,
                                                  _keyHelp = iGameState ^. keyHelp,
                                                  _players = iGameState ^. players
                                                  }
@@ -271,7 +272,7 @@ makeP2CorMove iGameState pIdx cdIdx cIdx = GSt { _field     = newfield,
                                                  _selpilefi = Nothing,
                                                  _selpilett = Nothing,
                                                  _selpileti = Nothing,
-                                                 _welcome   = iGameState ^. welcome,
+                                                 _screen  = iGameState ^. screen,
                                                  _keyHelp = iGameState ^. keyHelp,
                                                  _players = iGameState ^. players
                                                  }
@@ -312,7 +313,7 @@ makeCen2CenMove iGameState cIdxf cIdxt  = GSt { _field     = newfield,
                                                 _selpilefi = Nothing,
                                                 _selpilett = Nothing,
                                                 _selpileti = Nothing,
-                                                _welcome   = iGameState ^. welcome,
+                                                _screen  = iGameState ^. screen,
                                                 _keyHelp = iGameState ^. keyHelp,
                                                 _players = iGameState ^. players
                                                 }
@@ -354,7 +355,7 @@ makeCen2CorMove iGameState cIdxf cIdxt  = GSt { _field     = newfield,
                                                 _selpilefi = Nothing,
                                                 _selpilett = Nothing,
                                                 _selpileti = Nothing,
-                                                _welcome   = iGameState ^. welcome,
+                                                _screen   = iGameState ^. screen,
                                                 _keyHelp = iGameState ^. keyHelp,
                                                 _players = iGameState ^. players
                                                 }
