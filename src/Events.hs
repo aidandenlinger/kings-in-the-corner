@@ -12,6 +12,8 @@ import Graphics.Vty.Input (Event (..), Key (..))
 import Lens.Micro
 import Lens.Micro.TH (makeLenses)
 import Utils
+import Control.Monad.IO.Class
+import Brick.Types (Next(..))
 
 type GameState = GSt
 
@@ -22,6 +24,7 @@ makeLenses ''DCard
 makeLenses ''Pile
 makeLenses ''Field
 makeLenses ''GSt
+makeLenses ''PlayerInfo
 
 handleEvent :: GameState -> BrickEvent n e -> EventM n (Next GameState)
 handleEvent gs = case gs ^. screen of
@@ -63,9 +66,27 @@ handleGame gs (VtyEvent (EvKey KDown _))
   | not $ haveSelection gs = case gs ^. looking of
       PileLook _ -> continue $ setLook (PlayerLook 0) gs
       _ -> continue gs
--- n goes to Next player
-handleGame gs (VtyEvent (EvKey (KChar 'n') _)) = continue $ nextPlayer gs
-
+-- n goes to Next player, also handles AI case
+handleGame gs (VtyEvent (EvKey (KChar 'n') _)) = case nextPlayerType of
+  Human -> continue $ nextGS & screen .~ PopUp ("Next player: " ++ show nextPlayerIdx)
+  AI -> suspendAndResume $ finalAIState gs
+  where
+    nextGS = nextPlayer gs
+    nextPlayerType = ((nextGS ^. players) !! nextPlayerIdx) ^. ptype
+    nextPlayerIdx = nextGS ^. toplay
+    
+    finalAIState :: GSt -> IO GSt
+    finalAIState gameS = do
+      nextMove <- getAIMove nextPlayerIdx gameS
+      case nextMove of
+        Just m -> finalAIState (makeMove gameS m)
+        Nothing -> case nextPlayerGSType of
+          AI -> finalAIState nextPlayerGS
+          Human -> return (nextPlayerGS & screen .~ PopUp "AI Players have played.")
+      where
+        nextPlayerGS = nextPlayer gameS
+        nextPlayerGSType = ((nextPlayerGS ^. players) !! (nextPlayerGS ^. toplay)) ^. ptype
+        
 -- 'q' toggles keyHelp
 handleGame gs (VtyEvent (EvKey (KChar 'q') _)) =
   toggleHelp gs (gs ^. keyHelp)

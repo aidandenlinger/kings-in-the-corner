@@ -246,7 +246,7 @@ gameStart = do
             appChooseCursor = neverShowCursor
           }
   -- Start a two player game from a random generator
-  finalState <- defaultMain app . initGSt 2  0 <$> initStdGen
+  finalState <- defaultMain app . initGSt 2 1 <$> initStdGen
   final <- finalState -- need to access the gamestate,
                       -- otherwise haskell will be lazy
                       -- and not run the game at all :)
