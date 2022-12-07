@@ -1,6 +1,6 @@
 # Kings in the Corner
 
-![](https://upload.wikimedia.org/wikipedia/commons/d/d6/Kings_in_the_Corner_card_game.jpg)
+![](img/game.png)
 
 Developed by Aidan Denlinger, Rohin Garg, Amber Olsen, and Mayank Sharan (Group 42). This is a course project for [CSE 230 | Fall 2022 | UCSD](https://ucsd-cse230-np.github.io/web/).
 
@@ -39,6 +39,3 @@ Our goal is to develop a 2-4 player networked game of “Kings In The Corner” 
 | AI for local play        | 3 days        | Week 10    |
 | Bug fixes, completion    | 2 days        | Week 10    |
 | Demo / Presentation prep    | 2 days        | Week 10    |
-
-## Acknowledgements
-Image is from <https://commons.wikimedia.org/wiki/File:Kings_in_the_Corner_card_game.jpg>.
