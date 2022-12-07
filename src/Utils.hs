@@ -20,7 +20,8 @@ module Utils
     updateSelPileIdx,
     updateSelPileType,
     getMoveFromState,
-    updateToPlay
+    updateToPlay,
+    nCardsInHand
   ) where
 
 import Data.Maybe (fromMaybe, isJust)

@@ -5,7 +5,8 @@ module GamePlay
     makeMove,
     getScore,
     resetMove,
-    nextPlayer
+    nextPlayer,
+    isNextCard
   ) where
 
 import Data.Maybe (isJust, fromMaybe)
@@ -137,8 +138,8 @@ nextPlayer gs = nextPPopup $ updateToPlay nextP gsAfterDraw
   where
     nextP = (getCurrP gs + 1) `mod` length (getPHands gs) 
     gsForDraw = updateSelPileType True (Just DrawP) $
-                 updateSelPileType False (Just PlayerP) $
-                 updateSelPileIdx False (Just nextP) gs
+                updateSelPileType False (Just PlayerP) $
+                updateSelPileIdx False (Just nextP) gs
     gsAfterDraw = makeMove gsForDraw (getMoveFromState gsForDraw)
     nextPPopup gst = gst & screen .~ PopUp ("Next player: " ++ show nextP)
 

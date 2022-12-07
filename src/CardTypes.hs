@@ -17,6 +17,7 @@ module CardTypes
   ) where
 
 import qualified System.Random as R (StdGen)
+import Test.QuickCheck
 
 -- Base code borrowed from https://github.com/ambuc/solitaire
 
@@ -40,17 +41,23 @@ instance Show Rank where
   show R10 = [toEnum 0x2491] :: String; -- unicode ligature for one-char width 
   show RJ  = "J"; show RQ  = "Q"; show RK  = "K";
 
+instance Arbitrary Rank where
+  arbitrary = elements [RA, R2, R3, R4, R5, R6, R7, R8, R9, R10, RJ, RQ]
+
 -- Data type defining the suits
 
 data Suit    = Spade | Heart | Club | Diamond 
   deriving (Eq, Ord, Bounded, Enum)
 
+instance Arbitrary Suit where
+  arbitrary = elements [Spade, Heart, Club, Diamond]
+
 -- Instantiate show for suits with colored unicode symbols
 
 instance Show Suit where
   show Spade   = [toEnum 0x2660] :: String -- unicode characters for suits
-  show Heart   = "♥️"--[toEnum 0x2665] :: String
-  show Diamond = "♦️"--[toEnum 0x2666] :: String 
+  show Heart   = [toEnum 0x2661] :: String
+  show Diamond = [toEnum 0x25C7] :: String 
   show Club    = [toEnum 0x2663] :: String
 
 -- Data type for Card. Contains 2 attributes rank and suit.
