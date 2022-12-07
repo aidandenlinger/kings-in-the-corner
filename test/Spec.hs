@@ -26,7 +26,7 @@ makeLenses ''GSt
 -- Initialize game state
 
 getGSt :: Int -> Int -> GSt
-getGSt nPlayer seedv = initGSt nPlayer (mkStdGen seedv)
+getGSt nPlayer seedv = initGSt nPlayer (nPlayer - 1) (mkStdGen seedv)
 
 
 main :: IO ()

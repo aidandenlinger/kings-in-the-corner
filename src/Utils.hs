@@ -21,7 +21,8 @@ module Utils
     updateSelPileType,
     getMoveFromState,
     updateToPlay,
-    nCardsInHand
+    nCardsInHand,
+    setDifficulty
   ) where
 
 import Data.Maybe (fromMaybe, isJust)
@@ -40,6 +41,7 @@ makeLenses ''DCard
 makeLenses ''Pile
 makeLenses ''Field
 makeLenses ''GSt
+makeLenses ''PlayerInfo
 
 ------------------------------------------------------------------------------- 
 
@@ -268,21 +270,45 @@ genCenCorPiles (c:cs) (cenPiles, corPiles)
 
 genCenCorPiles [] (cenPiles, corPiles) = (cenPiles, corPiles)
 
+-- Set difficulty of the players. Used only for the AIs
+
+setDifficultyArr :: Int -> [PlayerInfo] -> [PlayerInfo]
+setDifficultyArr dlev = map (\p -> p & difficulty .~ dlev)
+
+setDifficulty :: Int -> GSt -> GSt
+setDifficulty diffLev iGameState = iGameState & players .~ setDifficultyArr diffLev (iGameState ^. players)
+
+-- Generate player info list
+
+initPlayers :: Int -> Int -> [PlayerInfo]
+initPlayers nHumans nAI
+  | nHumans > 0   = newHuman : initPlayers (nHumans - 1) nAI
+  | nAI > 0       = newAI : initPlayers nHumans (nAI- 1)
+  | otherwise     = []
+  where
+    newHuman      = PInfo { _ptype      = Human,
+                            _difficulty = 0
+                          }
+    newAI         = PInfo { _ptype      = AI,
+                            _difficulty = 0
+                          }
+
 -- take a random generator and initialize a game state
 
-initGSt :: Int -> R.StdGen -> GSt
-initGSt nPlayers seedval = GSt { _field     = fieldval,
-                                 _seed      = seedval,
-                                 _history   = [],
-                                 _toplay    = 0,
-                                 _looking   = PlayerLook 0,
-                                 _selcdidx  = Nothing,
-                                 _selpileft = Nothing,
-                                 _selpilefi = Nothing,
-                                 _selpilett = Nothing,
-                                 _selpileti = Nothing,
-                                 _screen = Welcome,
-                                 _keyHelp = (0, 0)
+initGSt :: Int -> Int -> R.StdGen -> GSt
+initGSt nPlayers nAI seedval = GSt { _field     = fieldval,
+                                     _seed      = seedval,
+                                     _history   = [],
+                                     _toplay    = 0,
+                                     _looking   = PlayerLook 0,
+                                     _selcdidx  = Nothing,
+                                     _selpileft = Nothing,
+                                     _selpilefi = Nothing,
+                                     _selpilett = Nothing,
+                                     _selpileti = Nothing,
+                                     _screen = Welcome,
+                                     _keyHelp = (0, 0),
+                                     _players = playersval
                                }
   where
     deal      = R.shuffle' initialDeal 52 seedval -- Shuffle the initial deal
@@ -305,3 +331,4 @@ initGSt nPlayers seedval = GSt { _field     = fieldval,
                        _suitBias = Nothing,
                        _pileType = DrawP
                      }
+    playersval = initPlayers (nPlayers - nAI) nAI
