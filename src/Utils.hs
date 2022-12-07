@@ -22,7 +22,8 @@ module Utils
     getMoveFromState,
     updateToPlay,
     nCardsInHand,
-    setDifficulty
+    setDifficulty,
+    welcomeGSt
   ) where
 
 import Data.Maybe (fromMaybe, isJust)
@@ -33,6 +34,7 @@ import qualified System.Random.Shuffle as R (shuffle')
 
 import CardTypes
 import Data.List (transpose)
+import System.Random (mkStdGen)
 
 -------------------------------------------------------------------------------
 -- Convert data types from CardTypes to Lenses for easy access
@@ -293,6 +295,10 @@ initPlayers nHumans nAI
                             _difficulty = 0
                           }
 
+-- Gamestate that will be thrown away, only used to display Welcome
+welcomeGSt :: GSt
+welcomeGSt = initGSt 2 1 (mkStdGen 0) & screen .~ Welcome NumPlayers 1 1 0
+
 -- take a random generator and initialize a game state
 
 initGSt :: Int -> Int -> R.StdGen -> GSt
@@ -306,7 +312,7 @@ initGSt nPlayers nAI seedval = GSt { _field     = fieldval,
                                      _selpilefi = Nothing,
                                      _selpilett = Nothing,
                                      _selpileti = Nothing,
-                                     _screen = Welcome,
+                                     _screen = Game,
                                      _keyHelp = (0, 0),
                                      _players = playersval
                                }

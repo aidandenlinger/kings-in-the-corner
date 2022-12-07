@@ -16,6 +16,7 @@ module CardTypes
     Move (..),
     PlayerInfo (..),
     PlayerType (..),
+    WelcomeSelect (..)
   )
 where
 
@@ -142,7 +143,10 @@ data Field = Field
 
 data Look = PlayerLook Int | PileLook Int deriving (Eq, Show)
 
-data Screen = Welcome | Game | PopUp String deriving (Eq, Show)
+-- Welcome fields: numPlayers numAI difficulty
+data Screen = Welcome WelcomeSelect Int Int Int | Game | PopUp String deriving (Eq, Show)
+
+data WelcomeSelect = NumPlayers | AIPlayers | Difficulty deriving (Eq, Show)
 
 -- Gamestate data type recording game history and current play situation
 
