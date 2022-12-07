@@ -59,7 +59,7 @@ handleWelcome gs (VtyEvent (EvKey KLeft _)) = case sel of
   where
     Welcome sel numPlayer numAI diff = gs ^. screen
 handleWelcome gs (VtyEvent (EvKey KEnter _)) = suspendAndResume $ do
-  newGs <- initGSt (numPlayer + 1) numAI <$> initStdGen
+  newGs <- initGSt (numPlayer + 1) (min numPlayer numAI) <$> initStdGen
   return $ setDifficulty diff newGs
   where
     Welcome sel numPlayer numAI diff = gs ^. screen
