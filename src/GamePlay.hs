@@ -161,7 +161,10 @@ nextPlayer gs = updateToPlay nextP gsAfterDraw
     gsForDraw = updateSelPileType True (Just DrawP) $
                 updateSelPileType False (Just PlayerP) $
                 updateSelPileIdx False (Just nextP) gs
-    gsAfterDraw = makeMove gsForDraw (getMoveFromState gsForDraw)
+    move = getMoveFromState gsForDraw
+    gsAfterDraw = if canMove gsForDraw move
+                    then makeMove gsForDraw (getMoveFromState gsForDraw)
+                    else resetMove gsForDraw & screen .~ Game -- no popup
 
 winPopUp :: GSt -> GSt
 winPopUp gs = gs & screen .~ PopUp winmsg
