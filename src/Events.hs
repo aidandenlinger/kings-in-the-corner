@@ -88,11 +88,14 @@ handleGame gs (VtyEvent (EvKey KLeft _)) =
 handleGame gs (VtyEvent (EvKey KEnter _)) = case gs ^. selpileft of
   Nothing -> continue $ makeSelection gs -- there is no selection, make first selection
   Just _ -> if canMove newGS move
-            then continue $ makeMove newGS move
+            then if hasWon afterMoveGS (gs ^. toplay)
+                  then continue $ winPopUp afterMoveGS
+                  else continue afterMoveGS
             else continue $ resetMove gs -- creates popup
     where
       move = getMoveFromState newGS
       newGS = makeSecondSelection gs -- we have already made a selection, this one is our move
+      afterMoveGS = makeMove newGS move
 
 -- Up and Down move between decks
 handleGame gs (VtyEvent (EvKey KUp _))
@@ -114,12 +117,14 @@ handleGame gs (VtyEvent (EvKey (KChar 'n') _)) = case nextPlayerType of
     
     finalAIState :: GSt -> IO GSt
     finalAIState gameS = do
-      nextMove <- getAIMove nextPlayerIdx gameS
+      nextMove <- getAIMove (gameS ^. toplay) gameS
       case nextMove of
         Just m -> finalAIState (makeMove gameS m)
-        Nothing -> case nextPlayerGSType of
-          AI -> finalAIState nextPlayerGS
-          Human -> return (nextPlayerGS & screen .~ PopUp "AI Players have played.")
+        Nothing -> if hasWon gameS (gameS ^. toplay)
+          then return $ winPopUp gameS
+          else case nextPlayerGSType of
+            AI -> finalAIState nextPlayerGS
+            Human -> return (nextPlayerGS & screen .~ PopUp "AI Players have played.")
       where
         nextPlayerGS = nextPlayer gameS
         nextPlayerGSType = ((nextPlayerGS ^. players) !! (nextPlayerGS ^. toplay)) ^. ptype
