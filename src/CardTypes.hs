@@ -13,6 +13,8 @@ module CardTypes
   , Rank(..) 
   , Suit(..)
   , Move(..)
+  , PlayerInfo(..)
+  , PlayerType(..)
   ) where
 
 import qualified System.Random as R (StdGen)
@@ -100,6 +102,19 @@ data Pile = Pile { _cards    :: [DCard]     --   List of cards in the pile in or
 -- GAME TYPES ------------------------------------------------------------------
 -- Data types required for gameplay
 
+-- Data type for Player info
+
+data PlayerType = Human | AI
+  deriving (Eq, Ord, Bounded, Enum)
+
+instance Show PlayerType where
+  show Human = "Human"
+  show AI    = "AI"
+
+data PlayerInfo = PInfo { _ptype      :: PlayerType   -- The type of the player
+                        , _difficulty :: Int          -- Difficulty level for AI player. Larger is more difficult
+                        } deriving (Eq, Show)
+
 -- Data type for the complete field
 
 data Field = Field { _drawPile    :: Pile
@@ -122,8 +137,9 @@ data GSt = GSt { _field     :: Field            -- Current state of decks
                , _selcdidx  :: Maybe Int        -- Card idx from the from pile if selected
                , _selpilett :: Maybe PileType   -- Pile type of the to pile if selected
                , _selpileti :: Maybe Int        -- Pile idx of the to pile if selected
-               , _welcome :: (Int, Int)         -- If welcome scren
-               , _keyHelp :: (Int, Int)         -- KeyHelp 
+               , _welcome   :: (Int, Int)       -- If welcome scren
+               , _keyHelp   :: (Int, Int)       -- KeyHelp 
+               , _players   :: [PlayerInfo]     -- List of players playing
                } deriving (Show)
 
 -- DISPLAY TYPES ---------------------------------------------------------------

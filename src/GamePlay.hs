@@ -6,12 +6,18 @@ module GamePlay
     getScore,
     resetMove,
     nextPlayer,
-    isNextCard
+    isNextCard,
+    getAIMove,
+    getCardMoves,
+    getPileMoves,
+    selFromMoves
   ) where
 
 import Data.Maybe (isJust, fromMaybe)
 import Lens.Micro ( (^.), (%~), (&), (.~), (^?!), _head, set )
 import Lens.Micro.TH (makeLenses)
+import Test.QuickCheck
+import Prelude
 
 import CardTypes
 import Utils
@@ -24,6 +30,7 @@ makeLenses ''Pile
 makeLenses ''Field
 makeLenses ''GSt
 makeLenses ''Move
+makeLenses ''PlayerInfo
 
 ------------------------------------------------------------------------------- 
 
@@ -59,7 +66,8 @@ getCornerTop gameState pileidx = ((((gameState ^. field . cornerPiles) !! pileid
 -- Helper functions to check for move validity
 
 isNextCard :: Card -> Card -> Bool
-isNextCard (Card rf sf) (Card rt st) = (succ rf == rt) && (assignColor sf /= assignColor st)
+isNextCard (Card RK _) _                = False
+isNextCard (Card rf sf) (Card rt st)    = (succ rf == rt) && (assignColor sf /= assignColor st)
 
 checkCenterMove :: GSt -> Int -> Card -> Bool
 checkCenterMove gameState cpileidx pcard@(Card pr _) 
@@ -165,7 +173,8 @@ makeDrawMove iGameState pIdx = GSt { _field     = newfield,
                                      _selpilett = Nothing,
                                      _selpileti = Nothing,
                                      _welcome   = iGameState ^. welcome,
-                                     _keyHelp = iGameState ^. keyHelp
+                                     _keyHelp = iGameState ^. keyHelp,
+                                     _players = iGameState ^. players
                                      }
     where
         toplayidx   = iGameState ^. toplay
@@ -204,7 +213,8 @@ resetMove gs = GSt { _field = gs ^. field,
                      _selpilett = Nothing,
                      _selpileti = Nothing,
                      _welcome   = gs ^. welcome,
-                     _keyHelp = gs ^. keyHelp
+                     _keyHelp = gs ^. keyHelp,
+                     _players = gs ^. players
                    }
 
 -- Update game state for a card from player hand to center pile
@@ -221,7 +231,8 @@ makeP2CenMove iGameState pIdx cdIdx cIdx = GSt { _field     = newfield,
                                                  _selpilett = Nothing,
                                                  _selpileti = Nothing,
                                                  _welcome   = iGameState ^. welcome,
-                                                 _keyHelp = iGameState ^. keyHelp
+                                                 _keyHelp = iGameState ^. keyHelp,
+                                                 _players = iGameState ^. players
                                                  }
     where
         toplayidx   = iGameState ^. toplay
@@ -261,7 +272,8 @@ makeP2CorMove iGameState pIdx cdIdx cIdx = GSt { _field     = newfield,
                                                  _selpilett = Nothing,
                                                  _selpileti = Nothing,
                                                  _welcome   = iGameState ^. welcome,
-                                                 _keyHelp = iGameState ^. keyHelp
+                                                 _keyHelp = iGameState ^. keyHelp,
+                                                 _players = iGameState ^. players
                                                  }
     where
         toplayidx   = iGameState ^. toplay
@@ -301,7 +313,8 @@ makeCen2CenMove iGameState cIdxf cIdxt  = GSt { _field     = newfield,
                                                 _selpilett = Nothing,
                                                 _selpileti = Nothing,
                                                 _welcome   = iGameState ^. welcome,
-                                                _keyHelp = iGameState ^. keyHelp
+                                                _keyHelp = iGameState ^. keyHelp,
+                                                _players = iGameState ^. players
                                                 }
     where
         toplayidx   = iGameState ^. toplay
@@ -342,7 +355,8 @@ makeCen2CorMove iGameState cIdxf cIdxt  = GSt { _field     = newfield,
                                                 _selpilett = Nothing,
                                                 _selpileti = Nothing,
                                                 _welcome   = iGameState ^. welcome,
-                                                _keyHelp = iGameState ^. keyHelp
+                                                _keyHelp = iGameState ^. keyHelp,
+                                                _players = iGameState ^. players
                                                 }
     where
         toplayidx   = iGameState ^. toplay
@@ -406,3 +420,117 @@ makeMove iGameState move
         fpileidx        = fromMaybe topOfPileIdx (move ^. fPileIdx)
         tpileidx        = fromMaybe topOfPileIdx (move ^. tPileIdx)
         isdrawnotempty  = not (null (iGameState ^. field . drawPile . cards))
+
+
+-- Goes through possible moves and returns a move for the Ai to make
+
+-- Get all possible card to center pile moves for the player
+
+getCardCorMoves :: Int -> Int -> Int -> GSt -> [Move]
+getCardCorMoves pIdx cardIdx cPileIdx gameState
+    | cPileIdx < numCPiles  = if canMove gameState candMove then candMove:movest else movest
+    | otherwise             = []
+    where
+        numCPiles   = length (gameState ^. field . cornerPiles)
+        candMove    = Move { _fPileType = PlayerP,
+                             _fPileIdx  = Just pIdx,
+                             _fCardIdx  = Just cardIdx,
+                             _tPileType = CornerP, 
+                             _tPileIdx  = Just cPileIdx
+                             }
+        movest      = getCardCorMoves pIdx cardIdx (cPileIdx+1) gameState
+
+-- Get all possible card to corner pile moves for the player
+
+getCardCenMoves :: Int -> Int -> Int -> GSt -> [Move]
+getCardCenMoves pIdx cardIdx cPileIdx gameState
+    | cPileIdx < numCPiles  = if canMove gameState candMove then candMove:movest else movest
+    | otherwise             = []
+    where
+        numCPiles   = length (gameState ^. field . centerPiles)
+        candMove    = Move { _fPileType = PlayerP,
+                             _fPileIdx  = Just pIdx,
+                             _fCardIdx  = Just cardIdx,
+                             _tPileType = CenterP, 
+                             _tPileIdx  = Just cPileIdx
+                             }
+        movest      = getCardCenMoves pIdx cardIdx (cPileIdx+1) gameState
+
+-- Get all possible card moves for the player
+
+getCardMoves :: Int -> Int -> GSt -> [Move]
+getCardMoves pIdx cardIdx gameState
+    | cardIdx < numCardsinHand = 
+        getCardCenMoves pIdx cardIdx 0 gameState ++ getCardCorMoves pIdx cardIdx 0 gameState ++ getCardMoves pIdx (cardIdx + 1) gameState
+    | otherwise                = 
+        []
+    where
+        numCardsinHand = length ((getPHands gameState !! pIdx) ^. cards)
+
+
+-- Get center to corner pile moves available
+
+getCenCorMoves :: Int -> Int -> GSt -> [Move]
+getCenCorMoves cPileIdxf cPileIdxt gameState
+    | cPileIdxt < numCPiles     = if canMove gameState candMove then candMove:movest else movest
+    | otherwise                 = []
+    where
+        numCPiles   = length (gameState ^. field . cornerPiles)
+        candMove    = Move { _fPileType = CenterP,
+                             _fPileIdx  = Just cPileIdxf,
+                             _fCardIdx  = Nothing,
+                             _tPileType = CornerP, 
+                             _tPileIdx  = Just cPileIdxt
+                             }
+        movest      = getCenCorMoves cPileIdxf (cPileIdxt + 1) gameState
+
+
+-- Get center to center pile moves available
+
+getCenCenMoves :: Int -> Int -> GSt -> [Move]
+getCenCenMoves cPileIdxf cPileIdxt gameState
+    | cPileIdxt < numCPiles     = if canMove gameState candMove then candMove:movest else movest
+    | otherwise                 = []
+    where
+        numCPiles   = length (gameState ^. field . centerPiles)
+        candMove    = Move { _fPileType = CenterP,
+                             _fPileIdx  = Just cPileIdxf,
+                             _fCardIdx  = Nothing,
+                             _tPileType = CenterP, 
+                             _tPileIdx  = Just cPileIdxt
+                             }
+        movest      = getCenCenMoves cPileIdxf (cPileIdxt + 1) gameState
+
+-- Get all possible pile moves available
+
+getPileMoves :: GSt -> Int -> [Move]
+getPileMoves gameState cenPileIdx
+    | cenPileIdx < numCPiles  = 
+        getCenCenMoves cenPileIdx 0 gameState ++ getCenCorMoves cenPileIdx 0 gameState ++ getPileMoves gameState (cenPileIdx + 1)
+    | otherwise             =
+        []
+    where
+        numCPiles   = length (gameState ^. field . centerPiles)
+
+-- Assumes the player being passed in is an AI
+
+getAIMove :: Int -> GSt -> IO (Maybe Move)
+getAIMove pIdx gameState = generate (selFromMoves cardMoves pileMoves dlev)
+    where
+        cardMoves   = getCardMoves pIdx 0 gameState
+        pileMoves   = getPileMoves gameState 0
+        dlev        = ((gameState ^. players) !! pIdx) ^. difficulty
+
+selFromMoves :: [Move] -> [Move] -> Int -> Gen (Maybe Move)
+selFromMoves cdMoves piMoves dlev
+    | not (null cdMoves) && not (null piMoves)  = 
+        frequency[((6 * dlev) + 3, elements cdMovesJ), ((4 * dlev) + 3, elements piMovesJ), (max (10 - (2 * dlev)) 1, elements [Nothing])]
+    | not (null cdMoves) && null piMoves        = 
+        frequency[((6 * dlev) + 3, elements cdMovesJ), (max (5 - (2 * dlev)) 1, elements [Nothing])]
+    | null cdMoves && not (null piMoves)        = 
+        frequency[((4 * dlev) + 3, elements piMovesJ), (max (5 - (2 * dlev)) 1, elements [Nothing])]
+    | otherwise                                 =
+        elements [Nothing]
+    where
+        cdMovesJ    = map (\m -> Just m) cdMoves
+        piMovesJ    = map (\m -> Just m) piMoves
